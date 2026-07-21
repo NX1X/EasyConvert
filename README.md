@@ -1,7 +1,11 @@
 # EasyConvert
 
+[![CI](https://github.com/NX1X/EasyConvert/actions/workflows/ci.yml/badge.svg)](https://github.com/NX1X/EasyConvert/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/NX1X/EasyConvert/actions/workflows/codeql.yml/badge.svg)](https://github.com/NX1X/EasyConvert/actions/workflows/codeql.yml)
 [![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/NX1X/EasyConvert/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-informational.svg)](LICENSE)
+[![Built](https://img.shields.io/badge/Built-June%202025-blue.svg)](#)
+[![Views](https://hits.sh/github.com/NX1X/EasyConvert.svg?label=Views&color=blue)](https://hits.sh/github.com/NX1X/EasyConvert/)
 
 A client-side PDF to Excel/CSV converter built with vanilla JavaScript. It specializes in extracting tables from PDF documents, processes everything locally in the browser, and supports right-to-left (Hebrew and Arabic) text.
 
