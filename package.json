@@ -30,7 +30,7 @@
   ],
   "author": "NX1X Lab <support@nx1xlab.dev>",
   "license": "Apache-2.0",
-  "homepage": "https://easyconvert.nx1xlab.dev",
+  "homepage": "https://convert.nx1xlab.dev",
   "bugs": {
     "url": "https://github.com/NX1X/EasyConvert/issues",
     "email": "support@nx1xlab.dev"

@@ -697,7 +697,7 @@ function enableDownloads() {
 
 /* ===== Social Sharing ===== */
 function shareOnFacebook() {
-    const url = encodeURIComponent('https://easyconvert.nx1xlab.dev');
+    const url = encodeURIComponent('https://convert.nx1xlab.dev');
     const title = currentLanguage === 'he' ?
         encodeURIComponent('EasyConvert - המרת טבלאות PDF לאקסל/CSV בחינם') :
         encodeURIComponent('EasyConvert - Free PDF Table to Excel/CSV Converter');
@@ -710,7 +710,7 @@ function shareOnFacebook() {
 }
 
 function shareOnTwitter() {
-    const url = encodeURIComponent('https://easyconvert.nx1xlab.dev');
+    const url = encodeURIComponent('https://convert.nx1xlab.dev');
     const text = currentLanguage === 'he' ?
         encodeURIComponent('גיליתי את EasyConvert - כלי חינמי להמרת טבלאות PDF לאקסל/CSV שמכבד פרטיות. ללא הרשמה, ללא איסוף נתונים, עובד במלואו בדפדפן. מתמחה בטבלאות בלבד. נבנה כדי לעזור לקהילה. #PDFConverter #Privacy #Hebrew #עברית') :
         encodeURIComponent('Discovered EasyConvert - a genuinely free PDF table converter that respects user privacy. No signup, no data collection, works entirely in your browser. Converts tables only. Built to help the community. #PDFConverter #Privacy #FreeTools');
@@ -720,7 +720,7 @@ function shareOnTwitter() {
 }
 
 function shareOnLinkedIn() {
-    const url = encodeURIComponent('https://easyconvert.nx1xlab.dev');
+    const url = encodeURIComponent('https://convert.nx1xlab.dev');
     const title = encodeURIComponent('EasyConvert - המרת טבלאות PDF בחינם עם הגנת פרטיות');
     const summary = encodeURIComponent('כלי מתוחכם וחינמי לחלוטין להמרת טבלאות מקבצי PDF לאקסל/CSV המעדיף פרטיות ואבטחת נתונים. כולל זיהוי טבלאות מתקדם, תמיכה בעברית וערבית, ועיבוד מקומי 100%. ללא הרשמה, ללא איסוף נתונים. A thoughtfully designed, completely free PDF table converter. Converts tables only - טבלאות בלבד. Built to serve the professional community without compromise.');
 
@@ -729,7 +729,7 @@ function shareOnLinkedIn() {
 }
 
 function shareOnWhatsApp() {
-    const url = 'https://easyconvert.nx1xlab.dev';
+    const url = 'https://convert.nx1xlab.dev';
     const text = encodeURIComponent(`מצאתי כלי מועיל להמרת טבלאות PDF לאקסל/CSV שמכבד פרטיות:\n\n✅ חינמי לחלוטין\n✅ ללא הרשמה\n✅ ללא איסוף נתונים\n✅ עובד במלואו בדפדפן\n✅ ללא הגבלת גודל קבצים\n✅ מתמחה בטבלאות בלבד - Tables only\n\nנבנה כדי לעזור, לא כדי להרוויח מהנתונים שלכם.\n\nFound a helpful PDF table converter that respects privacy - converts tables only!\n\n${url}`);
 
     if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -741,7 +741,7 @@ function shareOnWhatsApp() {
 }
 
 function shareOnTelegram() {
-    const url = encodeURIComponent('https://easyconvert.nx1xlab.dev');
+    const url = encodeURIComponent('https://convert.nx1xlab.dev');
     const text = encodeURIComponent('EasyConvert: כלי חינמי להמרת טבלאות PDF לאקסל/CSV שמכבד פרטיות. ללא הרשמה, ללא איסוף נתונים, עובד במלואו בדפדפן. מתמחה בטבלאות בלבד - Tables only. A genuinely free PDF table converter built to help the community.');
 
     window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank', 'noopener,noreferrer,width=600,height=400');
@@ -749,7 +749,7 @@ function shareOnTelegram() {
 }
 
 function shareOnInstagram() {
-    const text = `EasyConvert - המרת טבלאות PDF בחינם\n\n✅ חינמי לחלוטין\n✅ ללא הרשמה\n✅ ללא איסוף נתונים\n✅ עובד במלואו בדפדפן\n✅ מכבד פרטיות\n✅ מתמחה בטבלאות בלבד - Tables only\n\nנבנה כדי לעזור, לא כדי להרוויח מהנתונים.\n\nA privacy-focused PDF table converter\n\nLink: https://easyconvert.nx1xlab.dev\n\n#PDFConverter #Privacy #Hebrew #עברית #טבלאות #FreeTools`;
+    const text = `EasyConvert - המרת טבלאות PDF בחינם\n\n✅ חינמי לחלוטין\n✅ ללא הרשמה\n✅ ללא איסוף נתונים\n✅ עובד במלואו בדפדפן\n✅ מכבד פרטיות\n✅ מתמחה בטבלאות בלבד - Tables only\n\nנבנה כדי לעזור, לא כדי להרוויח מהנתונים.\n\nA privacy-focused PDF table converter\n\nLink: https://convert.nx1xlab.dev\n\n#PDFConverter #Privacy #Hebrew #עברית #טבלאות #FreeTools`;
 
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(function () {
