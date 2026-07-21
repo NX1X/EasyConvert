@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-21
+
+### Added
+
+- Published as a public open-source project under the Apache License 2.0
+- Subresource Integrity (SRI) pinning for the PDF.js and SheetJS CDN libraries
+- Renovate dependency automation: 14-day release cooldown, auto-merge for patch, minor, and security updates, majors reviewed manually, GitHub Actions digest pinning, and a custom manager that keeps the cdnjs library versions in sync across `index.html`, `app.js`, and `sw.js`
+- CI security suite: CodeQL, Gitleaks secret scanning, dependency review, a CDN version-consistency check, and a check that enforces SHA-pinned GitHub Actions
+- Spreadsheet formula-injection guard (`sanitizeCell`) on CSV and XLSX export
+
+### Changed
+
+- Relicensed from MIT to the Apache License 2.0
+- README rewritten for the public release (removed decorative emoji and hyperbole)
+- Replaced the Dependabot config with Renovate
+
+### Security
+
+- Content Security Policy hardened: `frame-ancestors 'none'`, expanded Permissions-Policy, `X-Permitted-Cross-Domain-Policies: none`, and explicit Cloudflare Web Analytics allowances
+- The `_worker.js` 404 fallback now returns security headers to probe traffic
+- `robots.txt` moved into `public/` and added to the asset allowlist
+- Internal docs moved to a gitignored `docs-internal/` directory (never published or deployed)
+
 ## [1.2.1] - 2026-04-17
 
 ### Fixed - Security
