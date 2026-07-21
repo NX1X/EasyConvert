@@ -1,0 +1,3 @@
+# Request routing is enforced by _worker.js (asset allowlist): any path not on
+# the allowlist returns 404, so repository files can never be served. Kept here
+# for reference; add path-level redirects below only if the worker allows them.

@@ -1,0 +1,43 @@
+{
+  "name": "easyconvert",
+  "version": "1.2.1",
+  "description": "Free PDF table to Excel/CSV converter with advanced table detection and RTL text support",
+  "main": "public/index.html",
+  "scripts": {
+    "serve": "python -m http.server 8000 -d public",
+    "serve-node": "npx serve public",
+    "version": "git add -A && git commit -m \"Version %npm_package_version%\"",
+    "release:patch": "node scripts/update-version.js",
+    "release:minor": "node scripts/update-version.js",
+    "release:major": "node scripts/update-version.js",
+    "release": "bash scripts/release.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NX1X/EasyConvert.git"
+  },
+  "keywords": [
+    "pdf-converter",
+    "pdf-to-excel",
+    "pdf-to-csv",
+    "table-extraction",
+    "hebrew-support",
+    "arabic-support",
+    "rtl-text",
+    "client-side",
+    "privacy-focused",
+    "free-converter"
+  ],
+  "author": "NX1X Lab <support@nx1xlab.dev>",
+  "license": "Apache-2.0",
+  "homepage": "https://easyconvert.nx1xlab.dev",
+  "bugs": {
+    "url": "https://github.com/NX1X/EasyConvert/issues",
+    "email": "support@nx1xlab.dev"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+} 

@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="85" fill="url(#bgGrad)" filter="url(#shadow)"/>
+  
+  <!-- Main conversion graphic -->
+  <g transform="translate(100, 100)">
+    
+    <!-- Left Document (PDF) -->
+    <g transform="translate(-40, 0)">
+      <!-- Document shape -->
+      <rect x="-15" y="-25" width="30" height="50" rx="4" fill="url(#docGrad)" filter="url(#shadow)"/>
+      <!-- Corner fold -->
+      <path d="M5,-25 L15,-25 L15,-15 L5,-25" fill="#e2e8f0"/>
+      <!-- Document lines (representing text) -->
+      <rect x="-10" y="-15" width="20" height="2" rx="1" fill="#dc2626" opacity="0.7"/>
+      <rect x="-10" y="-10" width="15" height="2" rx="1" fill="#dc2626" opacity="0.7"/>
+      <rect x="-10" y="-5" width="18" height="2" rx="1" fill="#dc2626" opacity="0.7"/>
+      <rect x="-10" y="0" width="12" height="2" rx="1" fill="#dc2626" opacity="0.7"/>
+      <rect x="-10" y="5" width="16" height="2" rx="1" fill="#dc2626" opacity="0.7"/>
+      <rect x="-10" y="10" width="14" height="2" rx="1" fill="#dc2626" opacity="0.7"/>
+      <rect x="-10" y="15" width="19" height="2" rx="1" fill="#dc2626" opacity="0.7"/>
+    </g>
+    
+    <!-- Conversion Arrow -->
+    <g transform="translate(0, 0)">
+      <!-- Arrow circle background -->
+      <circle cx="0" cy="0" r="20" fill="url(#arrowGrad)" filter="url(#glow)"/>
+      <!-- Arrow shape -->
+      <path d="M-8,-3 L5,-3 L5,-8 L15,0 L5,8 L5,3 L-8,3 Z" fill="white"/>
+      <!-- Flowing particles -->
+      <g opacity="0.6">
+        <circle cx="-25" cy="-5" r="1.5" fill="white">
+          <animate attributeName="cx" values="-25;25" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="-25" cy="0" r="1" fill="white">
+          <animate attributeName="cx" values="-25;25" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+          <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="-25" cy="5" r="1.5" fill="white">
+          <animate attributeName="cx" values="-25;25" dur="3s" repeatCount="indefinite" begin="1s"/>
+          <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+      </g>
+    </g>
+    
+    <!-- Right Document (Spreadsheet) -->
+    <g transform="translate(40, 0)">
+      <!-- Document shape -->
+      <rect x="-15" y="-25" width="30" height="50" rx="4" fill="url(#docGrad)" filter="url(#shadow)"/>
+      <!-- Spreadsheet grid -->
+      <g transform="translate(0, -5)">
+        <!-- Main grid -->
+        <rect x="-12" y="-15" width="24" height="30" fill="none" stroke="url(#arrowGrad)" stroke-width="1.5"/>
+        <!-- Vertical lines -->
+        <line x1="-4" y1="-15" x2="-4" y2="15" stroke="url(#arrowGrad)" stroke-width="1"/>
+        <line x1="4" y1="-15" x2="4" y2="15" stroke="url(#arrowGrad)" stroke-width="1"/>
+        <!-- Horizontal lines -->
+        <line x1="-12" y1="-7" x2="12" y2="-7" stroke="url(#arrowGrad)" stroke-width="1"/>
+        <line x1="-12" y1="1" x2="12" y2="1" stroke="url(#arrowGrad)" stroke-width="1"/>
+        <line x1="-12" y1="9" x2="12" y2="9" stroke="url(#arrowGrad)" stroke-width="1"/>
+        
+        <!-- Data cells (filled) -->
+        <rect x="-11" y="-14" width="7" height="6" fill="url(#arrowGrad)" opacity="0.2"/>
+        <rect x="-3" y="-6" width="6" height="6" fill="url(#arrowGrad)" opacity="0.2"/>
+        <rect x="5" y="2" width="6" height="6" fill="url(#arrowGrad)" opacity="0.2"/>
+        <rect x="-11" y="10" width="7" height="4" fill="url(#arrowGrad)" opacity="0.2"/>
+      </g>
+    </g>
+    
+    <!-- Decorative conversion symbols -->
+    <g opacity="0.3">
+      <!-- Small conversion indicators around the main arrow -->
+      <g transform="translate(-60, -30) rotate(45)">
+        <rect x="-1" y="-4" width="2" height="8" rx="1" fill="white"/>
+        <rect x="-4" y="-1" width="8" height="2" rx="1" fill="white"/>
+      </g>
+      <g transform="translate(60, -30) rotate(-45)">
+        <rect x="-1" y="-4" width="2" height="8" rx="1" fill="white"/>
+        <rect x="-4" y="-1" width="8" height="2" rx="1" fill="white"/>
+      </g>
+      <g transform="translate(-60, 30) rotate(-45)">
+        <rect x="-1" y="-4" width="2" height="8" rx="1" fill="white"/>
+        <rect x="-4" y="-1" width="8" height="2" rx="1" fill="white"/>
+      </g>
+      <g transform="translate(60, 30) rotate(45)">
+        <rect x="-1" y="-4" width="2" height="8" rx="1" fill="white"/>
+        <rect x="-4" y="-1" width="8" height="2" rx="1" fill="white"/>
+      </g>
+    </g>
+    
+  </g>
+  
+  <!-- Outer decorative elements -->
+  <g opacity="0.4">
+    <circle cx="30" cy="30" r="2" fill="white">
+      <animate attributeName="opacity" values="0.4;0.8;0.4" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="170" cy="30" r="1.5" fill="white">
+      <animate attributeName="opacity" values="0.4;0.8;0.4" dur="4s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    <circle cx="170" cy="170" r="2" fill="white">
+      <animate attributeName="opacity" values="0.4;0.8;0.4" dur="4s" repeatCount="indefinite" begin="2s"/>
+    </circle>
+    <circle cx="30" cy="170" r="1.5" fill="white">
+      <animate attributeName="opacity" values="0.4;0.8;0.4" dur="4s" repeatCount="indefinite" begin="3s"/>
+    </circle>
+  </g>
+</svg> 

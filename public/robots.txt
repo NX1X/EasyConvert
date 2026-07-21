@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /
+
+# Block all search engines from indexing this site
+# This website is not intended for public search engine indexing 

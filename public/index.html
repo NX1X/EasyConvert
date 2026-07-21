@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyConvert - PDF Table Converter</title>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+
+    <!-- App Configuration -->
+    <meta name="theme-color" content="#18181b">
+    <meta name="msapplication-TileColor" content="#18181b">
+    <meta name="application-name" content="EasyConvert">
+    <meta name="apple-mobile-web-app-title" content="EasyConvert">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <!-- Favicon -->
+    <link rel="icon" href="easyconvert-logo.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="easyconvert-icon.svg" type="image/svg+xml">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" as="script" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" as="script" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous">
+
+    <!-- External libraries (Subresource Integrity pinned) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-brand">
+            <img src="easyconvert-logo.svg" alt="EasyConvert" class="project-logo">
+            <h1 id="mainTitle">EasyConvert</h1>
+        </div>
+        <div class="header-controls">
+            <button class="lang-btn" id="langToggle">
+                <span id="langFlag">🇮🇱</span>
+                <span id="langText">עברית</span>
+            </button>
+            <button class="help-button" id="helpBtn">
+                <span id="helpButtonText">Help</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <main class="main-content">
+
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection" aria-label="File Upload Area">
+                <div class="upload-text" id="uploadText">Drop your PDF here, or click to browse</div>
+                <button class="upload-btn" id="uploadBtn">
+                    Choose PDF File
+                </button>
+                <div class="feature-tags">
+                    <span id="featureTag1">Free</span>
+                    <span id="featureTag2">Private</span>
+                    <span id="featureTag3">No signup</span>
+                    <span id="featureTag4">RTL support</span>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf" multiple aria-label="Select PDF file" />
+
+                <!-- Cloudflare Turnstile Widget (appears after file selection) -->
+                <div id="turnstileContainer">
+                    <div class="security-verification-text">
+                        <strong id="securityTitle">🔒 Security Verification:</strong><br>
+                        <span id="securityDesc">Please complete this quick verification to ensure secure processing</span>
+                    </div>
+                    <div id="turnstileWidget">
+                        <!-- Turnstile widget will be rendered here explicitly -->
+                    </div>
+                    <!-- Verification error - no bypass -->
+                    <div id="turnstileFallback">
+                        <p class="turnstile-error-title">Security verification failed</p>
+                        <p class="turnstile-error-desc">
+                            If you have an ad blocker or privacy extension, please allow <strong>challenges.cloudflare.com</strong> and reload the page.
+                        </p>
+                        <button class="turnstile-reload-btn" id="turnstileReloadBtn">
+                            Reload page
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- File Info -->
+            <div class="file-info" id="fileInfo">
+                <h3 id="fileInfoTitle">File Information</h3>
+                <p id="fileName"></p>
+                <p id="fileSize"></p>
+                <p id="pageCount"></p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <!-- Status Messages -->
+            <div class="status-message" id="statusMessage"></div>
+
+            <!-- Options Section -->
+            <section class="options-section" id="optionsSection" aria-label="Conversion Options">
+                <h3 class="options-title" id="optionsTitle">Conversion Options</h3>
+
+                <div class="option-group">
+                    <label class="option-label" id="extractionLabel">Data Extraction Method:</label>
+                    <select class="option-select" id="extractionMethod">
+                        <option value="table" id="optionTable">🔍 Smart Table Detection (Recommended)</option>
+                        <option value="text" id="optionText">📝 Text Extraction</option>
+                        <option value="structured" id="optionStructured">🏗️ Structured Data</option>
+                        <option value="advanced" id="optionAdvanced">🚀 Advanced Table Detection</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label" id="pageRangeLabel">Page Range:</label>
+                    <select class="option-select" id="pageRange">
+                        <option value="all" id="optionAllPages">📄 All Pages</option>
+                        <option value="first" id="optionFirstPage">1️⃣ First Page Only</option>
+                        <option value="custom" id="optionCustomRange">✏️ Custom Range</option>
+                    </select>
+                    <input type="text" class="option-input" id="customRange" placeholder="e.g., 1-5, 8, 10-12">
+                </div>
+
+                <div class="option-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeHeaders" checked>
+                        <label for="includeHeaders" id="labelIncludeHeaders">Include Headers</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="skipEmptyRows" checked>
+                        <label for="skipEmptyRows" id="labelSkipEmptyRows">Skip Empty Rows</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoDetectColumns" checked>
+                        <label for="autoDetectColumns" id="labelAutoDetectColumns">Auto-detect Columns</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="rtlSupport">
+                        <label for="rtlSupport" id="labelRtlSupport">Hebrew/Arabic RTL Support</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="mergeFragments" checked>
+                        <label for="mergeFragments" id="labelMergeFragments">Merge Text Fragments</label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-section" id="previewSection" aria-label="Data Preview">
+                <h3 class="options-title" id="previewTitle">Data Preview</h3>
+                <div class="preview-scroll">
+                    <table class="preview-table" id="previewTable">
+                        <thead id="previewHeader"></thead>
+                        <tbody id="previewBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Download Section -->
+            <section class="download-section" aria-label="Download Options">
+                <button class="download-btn" id="downloadExcel" disabled>
+                    <span id="downloadExcelText">📊 Download Excel</span>
+                </button>
+                <button class="download-btn" id="downloadCSV" disabled>
+                    <span id="downloadCSVText">📋 Download CSV</span>
+                </button>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Help Guide Popup -->
+    <div class="popup-overlay" id="helpPopup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2 id="popupTitle">📚 EasyConvert - Help &amp; Guide</h2>
+                <button class="popup-close" id="popupClose">&times;</button>
+            </div>
+            <div class="popup-body">
+                <div class="language-tabs">
+                    <button class="language-tab active" id="enTab">🇺🇸 English</button>
+                    <button class="language-tab" id="heTab">🇮🇱 עברית</button>
+                </div>
+
+                <!-- English Guide -->
+                <div class="language-content active" id="guideEn">
+                    <div class="guide-section">
+                        <h3>What is EasyConvert?</h3>
+                        <p>EasyConvert is a <strong>free</strong> PDF to Excel/CSV converter that specializes in extracting tables from PDF documents. All processing happens locally in your browser - your files never leave your device.</p>
+                        <div class="feature-highlight">
+                            <strong>Optimized for table extraction</strong><br>
+                            Works best with structured table data in PDFs. For best results, use Smart Table Detection.
+                        </div>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>How to use</h3>
+                        <ul>
+                            <li><strong>Step 1:</strong> Upload your PDF by dragging &amp; dropping or clicking "Choose PDF File"</li>
+                            <li><strong>Step 2:</strong> Complete the security verification (if prompted)</li>
+                            <li><strong>Step 3:</strong> Configure extraction options</li>
+                            <li><strong>Step 4:</strong> Preview the extracted data</li>
+                            <li><strong>Step 5:</strong> Download as Excel (.xlsx) or CSV</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>Extraction options</h3>
+                        <ul>
+                            <li><strong>Smart Table Detection:</strong> Best for structured tables and forms</li>
+                            <li><strong>Advanced Table Detection:</strong> For complex table layouts</li>
+                            <li><strong>RTL Support:</strong> Enable for Hebrew/Arabic text</li>
+                            <li><strong>Include Headers:</strong> Keep table headers in your output</li>
+                            <li><strong>Skip Empty Rows:</strong> Clean up your data automatically</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>Key features</h3>
+                        <ul>
+                            <li><strong>Free</strong> - No hidden costs or subscription plans</li>
+                            <li><strong>Private</strong> - Files processed locally, never uploaded to a server</li>
+                            <li><strong>No size limits</strong> - Convert files of any size</li>
+                            <li><strong>No signup</strong> - Start converting immediately</li>
+                            <li><strong>RTL support</strong> - Hebrew and Arabic text compatible</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Hebrew Guide -->
+                <div class="language-content" id="guideHe" dir="rtl">
+                    <div class="guide-section">
+                        <h3>מה זה EasyConvert?</h3>
+                        <p>EasyConvert הוא ממיר PDF לאקסל/CSV <strong>חינמי לחלוטין</strong> המתמחה בחילוץ טבלאות ממסמכי PDF. נבנה עם דגש על פרטיות - כל העיבוד מתרחש מקומית בדפדפן שלך - הקבצים שלך לא יוצאים מהמכשיר!</p>
+
+                        <div class="feature-highlight">
+                            <strong>כרגע מותאם לטבלאות בלבד</strong><br>
+                            EasyConvert עובד הכי טוב עם נתוני טבלאות מובנים ב-PDF.
+                        </div>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>איך להשתמש ב-EasyConvert</h3>
+                        <ul>
+                            <li><strong>שלב 1:</strong> העלה את קובץ ה-PDF שלך על ידי גרירה והשלכה או לחיצה על "בחר קובץ PDF"</li>
+                            <li><strong>שלב 2:</strong> השלם את אימות האבטחה (אם יתבקש)</li>
+                            <li><strong>שלב 3:</strong> הגדר אפשרויות חילוץ (זיהוי טבלאות חכם מומלץ)</li>
+                            <li><strong>שלב 4:</strong> צפה בנתונים שחולצו בטבלה למטה</li>
+                            <li><strong>שלב 5:</strong> הורד כאקסל (.xlsx) או פורמט CSV</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>אפשרויות חילוץ מומלצות</h3>
+                        <ul>
+                            <li><strong>זיהוי טבלאות חכם:</strong> הכי טוב לטבלאות מובנות וטפסים</li>
+                            <li><strong>זיהוי טבלאות מתקדם:</strong> לפריסות טבלה מורכבות</li>
+                            <li><strong>תמיכה ב-RTL:</strong> הפעל עבור טקסט עברי/ערבי</li>
+                            <li><strong>כלול כותרות:</strong> שמור כותרות טבלה בפלט שלך</li>
+                            <li><strong>דלג על שורות ריקות:</strong> נקה את הנתונים שלך אוטומטית</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>תכונות עיקריות</h3>
+                        <ul>
+                            <li><strong>חינמי</strong> - ללא עלויות נסתרות או תוכניות מנוי</li>
+                            <li><strong>פרטיות</strong> - קבצים מעובדים מקומית, לא מועלים לשרת</li>
+                            <li><strong>ללא הגבלת גודל</strong> - המר קבצים בכל גודל</li>
+                            <li><strong>ללא הרשמה</strong> - התחל להמיר מיד</li>
+                            <li><strong>תמיכה ב-RTL</strong> - תואם לטקסט עברי וערבי</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="contact-info" id="contactInfoEn">
+                    <p>Website: <a href="https://nx1xlab.dev" target="_blank" rel="noopener">nx1xlab.dev</a></p>
+                    <p class="contact-byline">Built by NX1X Lab</p>
+                </div>
+
+                <!-- Contact Information - Hebrew -->
+                <div class="contact-info" id="contactInfoHe">
+                    <p>Website: <a href="https://nx1xlab.dev" target="_blank" rel="noopener">nx1xlab.dev</a></p>
+                    <p class="contact-byline">Built by NX1X Lab</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Share Section -->
+    <section class="share-section">
+        <div class="share-container">
+            <div class="share-content">
+                <div class="share-text">
+                    <h3 id="shareTitle">Found EasyConvert helpful?</h3>
+                    <p id="shareDesc">Share this free, privacy-focused tool with others who might benefit</p>
+                </div>
+                <div class="share-buttons">
+                    <button class="share-btn" title="Share on Facebook">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    </button>
+                    <button class="share-btn" title="Share on X / Twitter">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                    </button>
+                    <button class="share-btn" title="Share on LinkedIn">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    </button>
+                    <button class="share-btn" title="Share on WhatsApp">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/></svg>
+                    </button>
+                    <button class="share-btn" title="Share on Telegram">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                    </button>
+                    <button class="share-btn" title="Share on Instagram">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-branding">
+                <img src="nx1xlab-logo.png" alt="NX1X Lab" class="footer-logo">
+                <span id="footerBranding">A project by <strong>NX1X</strong></span>
+            </div>
+
+            <div class="footer-links">
+                <a href="https://nx1xlab.dev/nxtools" target="_blank" rel="noopener" class="footer-link" id="footerLink1">More NX Tools</a>
+                <a href="https://nx1xlab.dev" target="_blank" rel="noopener" class="footer-link" id="footerLink2">NX1X Lab</a>
+                <a href="https://github.com/NX1X/EasyConvert" target="_blank" rel="noopener" class="footer-link" id="footerLink3">GitHub</a>
+            </div>
+
+            <div class="footer-privacy" id="footerPrivacy">
+                <strong>Privacy:</strong> Your PDFs are processed entirely in your browser. No files are uploaded to any server. Anonymous usage analytics via Cloudflare Analytics.
+            </div>
+
+            <div class="footer-copyright" id="footerCopyright">
+                &copy; NX1X.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Application script -->
+    <script src="app.js" defer></script>
+</body>
+</html>

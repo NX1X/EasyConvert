@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="doc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="arrow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="100" height="100" rx="20" fill="url(#bg)"/>
+  
+  <!-- Central design -->
+  <g transform="translate(50, 50)">
+    
+    <!-- Left Document (PDF) -->
+    <g transform="translate(-25, 0)">
+      <!-- Document shape -->
+      <rect x="-8" y="-15" width="16" height="30" rx="2" fill="url(#doc)"/>
+      <!-- Corner fold -->
+      <path d="M4,-15 L8,-15 L8,-11 L4,-15" fill="#e2e8f0"/>
+      <!-- Document lines -->
+      <rect x="-6" y="-8" width="10" height="1" rx="0.5" fill="#dc2626" opacity="0.7"/>
+      <rect x="-6" y="-5" width="8" height="1" rx="0.5" fill="#dc2626" opacity="0.7"/>
+      <rect x="-6" y="-2" width="9" height="1" rx="0.5" fill="#dc2626" opacity="0.7"/>
+      <rect x="-6" y="1" width="6" height="1" rx="0.5" fill="#dc2626" opacity="0.7"/>
+      <rect x="-6" y="4" width="8" height="1" rx="0.5" fill="#dc2626" opacity="0.7"/>
+      <rect x="-6" y="7" width="7" height="1" rx="0.5" fill="#dc2626" opacity="0.7"/>
+      <rect x="-6" y="10" width="9" height="1" rx="0.5" fill="#dc2626" opacity="0.7"/>
+    </g>
+    
+    <!-- Conversion Arrow -->
+    <g transform="translate(0, 0)">
+      <!-- Arrow circle -->
+      <circle cx="0" cy="0" r="12" fill="url(#arrow)"/>
+      <!-- Arrow shape -->
+      <path d="M-5,-2 L3,-2 L3,-4 L8,0 L3,4 L3,2 L-5,2 Z" fill="white"/>
+    </g>
+    
+    <!-- Right Document (Spreadsheet) -->
+    <g transform="translate(25, 0)">
+      <!-- Document shape -->
+      <rect x="-8" y="-15" width="16" height="30" rx="2" fill="url(#doc)"/>
+      <!-- Spreadsheet grid -->
+      <g transform="translate(0, -2)">
+        <!-- Main grid -->
+        <rect x="-6" y="-8" width="12" height="16" fill="none" stroke="url(#arrow)" stroke-width="1"/>
+        <!-- Vertical lines -->
+        <line x1="-2" y1="-8" x2="-2" y2="8" stroke="url(#arrow)" stroke-width="0.8"/>
+        <line x1="2" y1="-8" x2="2" y2="8" stroke="url(#arrow)" stroke-width="0.8"/>
+        <!-- Horizontal lines -->
+        <line x1="-6" y1="-3" x2="6" y2="-3" stroke="url(#arrow)" stroke-width="0.8"/>
+        <line x1="-6" y1="1" x2="6" y2="1" stroke="url(#arrow)" stroke-width="0.8"/>
+        <line x1="-6" y1="5" x2="6" y2="5" stroke="url(#arrow)" stroke-width="0.8"/>
+        
+        <!-- Data cells -->
+        <rect x="-5" y="-7" width="3" height="3" fill="url(#arrow)" opacity="0.2"/>
+        <rect x="-1" y="-2" width="2" height="2" fill="url(#arrow)" opacity="0.2"/>
+        <rect x="3" y="2" width="2" height="2" fill="url(#arrow)" opacity="0.2"/>
+      </g>
+    </g>
+    
+  </g>
+  
+  <!-- Corner accents -->
+  <circle cx="20" cy="20" r="1.5" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="80" cy="20" r="1" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="20" cy="80" r="1" fill="rgba(255,255,255,0.5)"/>
+</svg> 

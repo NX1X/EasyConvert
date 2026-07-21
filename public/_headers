@@ -1,0 +1,54 @@
+/*
+  # Clickjacking protection
+  X-Frame-Options: DENY
+
+  # Prevent MIME-type sniffing
+  X-Content-Type-Options: nosniff
+
+  # Legacy XSS filter (older browsers)
+  X-XSS-Protection: 1; mode=block
+
+  # Limit referrer info sent cross-origin
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Restrict browser feature APIs (clipboard left at same-origin default for the Instagram share fallback)
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), fullscreen=(self), picture-in-picture=(), display-capture=(), screen-wake-lock=(), xr-spatial-tracking=(), serial=(), hid=(), idle-detection=(), interest-cohort=(), browsing-topics=()
+
+  # Force HTTPS for 1 year - submitted to preload list
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # Prevent cross-origin window attacks
+  Cross-Origin-Opener-Policy: same-origin
+
+  # Prevent cross-origin resource reads
+  Cross-Origin-Resource-Policy: same-origin
+
+  # Block legacy Flash/PDF cross-domain policy files
+  X-Permitted-Cross-Domain-Policies: none
+
+  # Content Security Policy
+  # Notes:
+  #   - No 'unsafe-inline': JS is in app.js, CSS is in style.css, no inline handlers
+  #   - worker-src needs blob: (PDF.js fetches worker then wraps it in a blob URL)
+  #   - worker-src needs cdnjs for the initial fetch before blob wrapping
+  #   - connect-src includes cdnjs as defense-in-depth if a future PDF.js/xlsx build fetches its worker
+  #   - frame-ancestors 'none' is the modern clickjacking control (X-Frame-Options is the legacy fallback)
+  #   - upgrade-insecure-requests: forces HTTP sub-resources to HTTPS
+  #   - static.cloudflareinsights.com: Cloudflare Web Analytics beacon (script + beacon POST)
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self'; img-src 'self' data: https://challenges.cloudflare.com; font-src 'self' data:; connect-src 'self' https://challenges.cloudflare.com https://cdnjs.cloudflare.com https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; worker-src 'self' blob: https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+
+/*.html
+  Cache-Control: public, max-age=3600
+
+/*.js
+  Cache-Control: public, max-age=31536000
+
+/*.css
+  Cache-Control: public, max-age=31536000
+
+/manifest.json
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json
+
+/sw.js
+  Cache-Control: public, max-age=0

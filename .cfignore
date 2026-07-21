@@ -1,0 +1,29 @@
+# Cloudflare Pages: the primary control is "Build output directory = public".
+# Only files under public/ are ever served. This file is defense-in-depth so
+# that even a misconfigured root-directory deploy never exposes these paths.
+
+# Version control
+.git/
+.gitignore
+.cfignore
+
+# CI / repo config
+.github/
+
+# Docs and metadata (not part of the site)
+README.md
+CHANGELOG.md
+LICENSE
+docs-internal/
+
+# Package metadata
+package.json
+package-lock.json
+node_modules/
+
+# Tooling / local
+scripts/
+scanmysms-download/
+.vscode/
+.claude/
+CLAUDE.md

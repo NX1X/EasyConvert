@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "minimumReleaseAge": "14 days",
+  "internalChecksFilter": "strict",
+  "platformAutomerge": true,
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "description": "Security fixes: raise immediately (no cooldown) and auto-merge once CI is green",
+    "labels": ["dependencies", "security"],
+    "minimumReleaseAge": null,
+    "automerge": true,
+    "dependencyDashboardApproval": false
+  },
+  "packageRules": [
+    {
+      "description": "Auto-merge patch and minor updates once they clear the 14-day cooldown and CI is green",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest", "bump"],
+      "automerge": true
+    },
+    {
+      "description": "Never auto-merge major updates - review and merge them myself",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "dependencyDashboardApproval": true
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Keep the cdnjs-hosted PDF.js and SheetJS libraries (and their SRI hashes) up to date across index.html, app.js (worker), and sw.js (cache list) so versions never drift",
+      "managerFilePatterns": ["/public/(index\\.html|app\\.js|sw\\.js)$/"],
+      "matchStrings": [
+        "cdnjs\\.cloudflare\\.com/ajax/libs/(?<depName>[^/]+?)/(?<currentValue>[^/]+?)/(?<asset>[^\"]+?)\"(?:[^>]*?integrity=\"(?<currentDigest>sha\\d+-[^\"]+)\")?"
+      ],
+      "depNameTemplate": "{{{depName}}}",
+      "packageNameTemplate": "{{{depName}}}/{{{asset}}}",
+      "datasourceTemplate": "cdnjs"
+    }
+  ]
+}
