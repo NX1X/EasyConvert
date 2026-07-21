@@ -30,6 +30,12 @@
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Stay on the pdf.js v3 line - v4+ is an ESM rewrite that needs a code migration, and cdnjs has no matching SRI digest for it (causes the lookup-failure warning)",
+      "matchDatasources": ["cdnjs"],
+      "matchDepNames": ["pdf.js"],
+      "allowedVersions": "<4"
     }
   ],
   "customManagers": [
