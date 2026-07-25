@@ -32,6 +32,13 @@
       "dependencyDashboardApproval": true
     },
     {
+      "description": "Never auto-merge GitHub Actions digest repoints (same tag, new SHA) - the tj-actions-style compromise vector. Review the diff myself via the dashboard",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "automerge": false,
+      "dependencyDashboardApproval": true
+    },
+    {
       "description": "Stay on the pdf.js v3 line - v4+ is an ESM rewrite that needs a code migration, and cdnjs has no matching SRI digest for it (causes the lookup-failure warning)",
       "matchDatasources": ["cdnjs"],
       "matchDepNames": ["pdf.js"],
@@ -44,7 +51,7 @@
       "description": "Keep the cdnjs-hosted PDF.js and SheetJS libraries (and their SRI hashes) up to date across index.html, app.js (worker), and sw.js (cache list) so versions never drift",
       "managerFilePatterns": ["/public/(index\\.html|app\\.js|sw\\.js)$/"],
       "matchStrings": [
-        "cdnjs\\.cloudflare\\.com/ajax/libs/(?<depName>[^/]+?)/(?<currentValue>[^/]+?)/(?<asset>[^\"]+?)\"(?:[^>]*?integrity=\"(?<currentDigest>sha\\d+-[^\"]+)\")?"
+        "cdnjs\\.cloudflare\\.com/ajax/libs/(?<depName>[^/]+?)/(?<currentValue>[^/]+?)/(?<asset>[^\"'\\s]+?)[\"'](?:[^>\\n]*?integrity=[\"'](?<currentDigest>sha\\d+-[^\"']+)[\"'])?"
       ],
       "depNameTemplate": "{{{depName}}}",
       "packageNameTemplate": "{{{depName}}}/{{{asset}}}",

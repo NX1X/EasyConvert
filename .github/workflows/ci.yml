@@ -19,20 +19,36 @@ jobs:
     name: CDN version consistency
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Check pinned cdnjs versions are in sync
-        run: bash scripts/check-cdn-versions.sh
+      - name: Check pinned cdnjs versions and SRI hashes (under Egret)
+        uses: NX1X/Egret@33168ca2b8abb2218ee5b216655ea2597d5f6925 # v0.2.0
+        with:
+          policy: .github/egret-policy.yaml
+          mode: audit
+          command: bash scripts/check-cdn-versions.sh
+          fail-on-violations: true
 
   action-pinning:
     name: Actions pinned to SHA
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Fail if any action is not SHA-pinned
-        run: bash scripts/check-action-pins.sh
+      - name: Fail if any action is not SHA-pinned (under Egret)
+        uses: NX1X/Egret@33168ca2b8abb2218ee5b216655ea2597d5f6925 # v0.2.0
+        with:
+          policy: .github/egret-policy.yaml
+          mode: audit
+          command: bash scripts/check-action-pins.sh
+          fail-on-violations: true
