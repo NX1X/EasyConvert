@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-25
+
+### Security
+
+- Table extraction hardened against denial-of-service PDFs: the column-detection histogram is built from a difference array (O(items + size) instead of O(rows x size) work), and fragment merging skips rows with more than 400 fragments, so a crafted PDF degrades gracefully instead of freezing the tab
+- Excel exports mark formula-leading cells with the Text number format, so an in-place edit in Excel cannot silently convert them into live formulas (cell text stays unmangled)
+- The CDN consistency check (`scripts/check-cdn-versions.sh`) now also fails when a cdnjs reference in `index.html` is missing a valid SRI integrity attribute or `crossorigin="anonymous"`, or when the same asset carries different digests, so a stripped or tampered hash can no longer pass CI
+- Renovate no longer auto-merges GitHub Actions digest updates (same tag, new SHA); they now require dependency-dashboard approval before merging
+
+### Fixed
+
+- Renovate's custom cdnjs manager now matches the single-quoted library URLs in `app.js` and `sw.js`; previously only `index.html` was tracked, so automated library updates would have left the PDF.js worker and the service-worker cache list on the old version
+
 ## [1.4.0] - 2026-07-25
 
 ### Added

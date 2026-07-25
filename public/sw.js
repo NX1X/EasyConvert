@@ -1,4 +1,4 @@
-const CACHE_NAME = 'easyconvert-v1.4.0';
+const CACHE_NAME = 'easyconvert-v1.5.0';
 const urlsToCache = [
   '/',
   '/index.html',

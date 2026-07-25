@@ -333,6 +333,11 @@ function rtlSupportEnabled() {
 // host by replacing the space nearest to the fragment's position.
 function mergeContainedFragments(items) {
     if (items.length < 2) return items;
+    // The containment scan below is quadratic. Real rows hold at most a few
+    // dozen fragments; a crafted PDF can pack thousands into one visual row,
+    // so past this size skip the cosmetic decimal-overlay repair instead of
+    // freezing the tab.
+    if (items.length > 400) return items;
 
     const sorted = items.slice().sort(function (a, b) { return a.x - b.x || b.width - a.width; });
     const out = [];
@@ -468,20 +473,37 @@ function detectColumnIntervals(rows, minGap) {
     const size = Math.ceil(maxX - minX) + 1;
     if (!isFinite(size) || size <= 0 || size > 50000) return [];
 
-    // per-1pt-bucket count of rows covering that x position
-    const coverage = new Array(size).fill(0);
+    // per-1pt-bucket count of rows covering that x position, built from a
+    // difference array so total work stays O(items + size). A per-row
+    // boolean array would be O(rows x size): a crafted PDF with thousands
+    // of sparse rows across a wide x-range freezes the tab.
+    const diff = new Array(size + 1).fill(0);
     multiRows.forEach(function (row) {
-        const covered = new Array(size).fill(false);
+        // row items are sorted by x; merge overlapping intervals so the row
+        // counts each position once no matter how many fragments cover it
+        let curFrom = -1, curTo = -1;
         row.forEach(function (item) {
             if (!item.text) return;
-            const from = Math.floor(item.x - minX);
+            const from = Math.max(0, Math.floor(item.x - minX));
             const to = Math.min(size - 1, Math.ceil(item.x + item.width - minX));
-            for (let b = Math.max(0, from); b <= to; b++) covered[b] = true;
+            if (to < from) return;
+            if (curFrom === -1) {
+                curFrom = from; curTo = to;
+            } else if (from <= curTo + 1) {
+                curTo = Math.max(curTo, to);
+            } else {
+                diff[curFrom]++; diff[curTo + 1]--;
+                curFrom = from; curTo = to;
+            }
         });
-        for (let b = 0; b < size; b++) {
-            if (covered[b]) coverage[b]++;
-        }
+        if (curFrom !== -1) { diff[curFrom]++; diff[curTo + 1]--; }
     });
+    const coverage = new Array(size).fill(0);
+    let running = 0;
+    for (let b = 0; b < size; b++) {
+        running += diff[b];
+        coverage[b] = running;
+    }
 
     const threshold = Math.max(1, Math.floor(multiRows.length * 0.34));
 
@@ -819,6 +841,19 @@ function downloadExcelFile(data, includeHeaders) {
     try {
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
+
+        // Cells are string-typed so Excel never evaluates them as formulas,
+        // but mark formula-leading cells with the Text number format so an
+        // in-place edit in Excel cannot silently convert them either. Note:
+        // a manual re-export to CSV from Excel still emits the raw text.
+        Object.keys(ws).forEach(function (addr) {
+            if (addr[0] === '!') return;
+            const cell = ws[addr];
+            if (cell && cell.t === 's' &&
+                /^[=+\-@\t\r]/.test(cell.v) && !/^-?\d+(?:\.\d+)?$/.test(cell.v)) {
+                cell.z = '@';
+            }
+        });
 
         const colWidths = [];
         if (data.length > 0) {
