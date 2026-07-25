@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The footer copyright year never appeared: the language initialiser only re-rendered the page when a saved language differed from the current one, so a visitor using the default language kept the static placeholder. The year is now always rendered, and an unrecognised saved language falls back to English instead of blanking the interface
+- `LICENSE` carried the closing Apache boilerplate twice: the unfilled `Copyright [yyyy] [name of copyright owner]` template followed by a second copy naming the owner. The appendix now appears once, reading `Copyright 2025-2026 NX1X`, and the rest of the file is byte-identical to the canonical Apache License 2.0 text
 
 ### Changed
 
