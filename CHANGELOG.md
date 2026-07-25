@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Excel exports mark formula-leading cells with the Text number format, so an in-place edit in Excel cannot silently convert them into live formulas (cell text stays unmangled)
 - The CDN consistency check (`scripts/check-cdn-versions.sh`) now also fails when a cdnjs reference in `index.html` is missing a valid SRI integrity attribute or `crossorigin="anonymous"`, or when the same asset carries different digests, so a stripped or tampered hash can no longer pass CI
 - Renovate no longer auto-merges GitHub Actions digest updates (same tag, new SHA); they now require dependency-dashboard approval before merging
-- The CI guard scripts now run under the [Egret](https://github.com/NX1X/Egret) runtime security action in audit mode with a zero-egress policy (`.github/egret-policy.yaml`), reporting violations to code scanning via SARIF
 
 ### Fixed
 
