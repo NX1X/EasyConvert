@@ -694,22 +694,41 @@ body {
     flex-shrink: 0;
 }
 
-.footer-license {
-    font-size: 0.85rem;
-    opacity: 0.8;
-    margin-bottom: 12px;
-}
-
-.footer-license a {
-    color: white;
-    text-decoration: underline;
-}
-
-.footer-copyright {
+/* Bottom legal bar: copyright and licence sit on one line, separated by a
+   dot, and wrap onto separate lines on narrow screens. */
+.footer-legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 12px;
     font-size: 0.85rem;
     opacity: 0.7;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 20px;
+}
+
+.footer-legal-dot {
+    opacity: 0.5;
+}
+
+.footer-legal a {
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    transition: var(--transition);
+}
+
+.footer-legal a:hover,
+.footer-legal a:focus-visible {
+    border-bottom-color: white;
+}
+
+/* On very narrow screens the dot separator adds noise once items wrap */
+@media (max-width: 420px) {
+    .footer-legal-dot {
+        display: none;
+    }
 }
 
 /* Share Section */

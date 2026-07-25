@@ -1,6 +1,6 @@
 {
   "name": "easyconvert",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Free PDF table to Excel/CSV converter with advanced table detection and RTL text support",
   "main": "public/index.html",
   "scripts": {

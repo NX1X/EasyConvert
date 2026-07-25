@@ -4,8 +4,19 @@
 
 # Version control
 .git/
+.gitattributes
 .gitignore
 .cfignore
+
+# Environment and key material (must never be served)
+.env
+.env.*
+.dev.vars
+*.pem
+*.key
+*.p12
+*.pfx
+*.secret
 
 # CI / repo config
 .github/
@@ -25,5 +36,8 @@ node_modules/
 scripts/
 scanmysms-download/
 .vscode/
+.idea/
+*.code-workspace
 .claude/
 CLAUDE.md
+.editorconfig
