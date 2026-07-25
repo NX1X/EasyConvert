@@ -1,0 +1,23 @@
+# Egret runtime security policy for CI (https://github.com/NX1X/Egret)
+# The guard scripts wrapped by Egret are pure-local file checks: they need
+# zero network egress, so any outbound connection is a violation.
+# Audit mode only - block mode is not validated on GitHub-hosted runners.
+version: 1
+mode: audit
+
+egress:
+  allowed-endpoints: []
+  block-raw-ip: true
+
+filesystem:
+  protected-paths:
+    - .git/
+    - ~/.ssh/
+    - /etc/
+
+process:
+  disallowed: []
+
+report:
+  format: [markdown, json]
+  github-job-summary: true
