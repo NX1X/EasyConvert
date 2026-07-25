@@ -684,6 +684,27 @@ body {
     margin-bottom: 20px;
 }
 
+.footer-github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.footer-github-icon {
+    flex-shrink: 0;
+}
+
+.footer-license {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-bottom: 12px;
+}
+
+.footer-license a {
+    color: white;
+    text-decoration: underline;
+}
+
 .footer-copyright {
     font-size: 0.85rem;
     opacity: 0.7;
