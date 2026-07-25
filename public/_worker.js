@@ -9,7 +9,8 @@ export default {
       '/manifest.json', '/robots.txt',
       '/easyconvert-logo.svg', '/easyconvert-icon.svg',
       '/nx1xlab-logo.png', '/nx1xlab-logo.ico',
-      '/icons/icon-192x192.png', '/icons/icon-512x512.png'
+      '/favicon-16.png', '/favicon-32.png', '/apple-touch-icon.png',
+      '/icon-192.png', '/icon-512.png', '/og-image.png'
     ];
 
     if (allowed.includes(path)) {
