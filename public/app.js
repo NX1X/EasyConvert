@@ -33,7 +33,9 @@ setTimeout(function () {
 
 /* ===== Global Variables ===== */
 let currentPDF = null;
+let rawExtractedData = []; // untouched extraction result; cleanup options always re-derive from this
 let extractedData = [];
+let lastExtractionRTL = false; // any processed page was RTL-dominant (drives preview dir + Excel RTL view)
 let fileName = '';
 let turnstileVerified = false;
 let pendingFile = null;
@@ -109,25 +111,23 @@ if (shareBtns[5]) shareBtns[5].addEventListener('click', shareOnInstagram);
 
 // Conversion option change listeners
 document.getElementById('includeHeaders').addEventListener('change', updatePreview);
-document.getElementById('skipEmptyRows').addEventListener('change', function () {
-    if (extractedData.length > 0) {
-        extractedData = cleanAndStructureData(extractedData);
+function reapplyCleanupOptions() {
+    if (rawExtractedData.length > 0) {
+        extractedData = cleanAndStructureData(rawExtractedData);
+        updatePreview();
+    }
+}
+document.getElementById('skipEmptyRows').addEventListener('change', reapplyCleanupOptions);
+document.getElementById('autoDetectColumns').addEventListener('change', reapplyCleanupOptions);
+// RTL support changes column ordering, so re-extract when a PDF is loaded
+document.getElementById('rtlSupport').addEventListener('change', function () {
+    if (currentPDF) {
+        extractDataFromPDF();
+    } else {
         updatePreview();
     }
 });
-document.getElementById('autoDetectColumns').addEventListener('change', function () {
-    if (extractedData.length > 0) {
-        extractedData = cleanAndStructureData(extractedData);
-        updatePreview();
-    }
-});
-document.getElementById('rtlSupport').addEventListener('change', updatePreview);
-document.getElementById('mergeFragments').addEventListener('change', function () {
-    if (extractedData.length > 0) {
-        extractedData = cleanAndStructureData(extractedData);
-        updatePreview();
-    }
-});
+document.getElementById('mergeFragments').addEventListener('change', reapplyCleanupOptions);
 document.getElementById('extractionMethod').addEventListener('change', function () {
     if (currentPDF) {
         extractDataFromPDF();
@@ -159,45 +159,63 @@ function handleDragLeave(event) {
     uploadSection.classList.remove('dragover');
 }
 
+// Some file managers deliver dropped files with an empty MIME type,
+// so fall back to the file extension.
+function isPDFFile(file) {
+    return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+}
+
 function handleDrop(event) {
     event.preventDefault();
     uploadSection.classList.remove('dragover');
 
     const files = event.dataTransfer.files;
-    if (files.length > 0 && files[0].type === 'application/pdf') {
+    if (files.length > 0 && isPDFFile(files[0])) {
         processFile(files[0]);
     } else {
-        showStatus('Please drop a valid PDF file.', 'error');
+        showStatus(t('statusDropInvalid'), 'error');
     }
 }
 
 async function processFile(file) {
-    if (file.type !== 'application/pdf') {
-        showStatus('Please select a valid PDF file.', 'error');
+    if (!isPDFFile(file)) {
+        showStatus(t('statusInvalidFile'), 'error');
         return;
     }
 
-    fileName = file.name.replace('.pdf', '');
+    // Release the previous document before loading a new one
+    if (currentPDF) {
+        currentPDF.destroy();
+        currentPDF = null;
+    }
+
+    fileName = file.name.replace(/\.pdf$/i, '');
     showFileInfo(file);
+
+    // Already verified this session - skip straight to processing
+    if (turnstileVerified) {
+        processPDFAfterVerification(file);
+        return;
+    }
 
     // Show Turnstile verification before processing
     pendingFile = file;
     turnstileContainer.style.display = 'block';
-    showStatus('Please complete the security verification below to proceed.', 'info');
+    showStatus(t('statusVerify'), 'info');
 
     renderTurnstileWidget();
 }
 
 async function processPDFAfterVerification(file) {
     showProgress(10);
-    showStatus('Loading PDF file...', 'info');
+    showStatus(t('statusLoading'), 'info');
 
     try {
         const arrayBuffer = await file.arrayBuffer();
         showProgress(30);
 
         currentPDF = await pdfjsLib.getDocument(arrayBuffer).promise;
-        document.getElementById('pageCount').textContent = `Pages: ${currentPDF.numPages}`;
+        document.getElementById('pageCount').textContent = t('pageCountLabel', { n: currentPDF.numPages });
 
         showProgress(50);
         optionsSection.style.display = 'block';
@@ -206,7 +224,7 @@ async function processPDFAfterVerification(file) {
 
     } catch (error) {
         console.error('Error processing PDF:', error);
-        showStatus('Error processing PDF file. Please try again.', 'error');
+        showStatus(t('statusErrorProcessing'), 'error');
         hideProgress();
     }
 }
@@ -216,7 +234,7 @@ async function extractDataFromPDF() {
     if (!currentPDF) return;
 
     showProgress(60);
-    showStatus('Extracting data from PDF...', 'info');
+    showStatus(t('statusExtracting'), 'info');
 
     try {
         const method = document.getElementById('extractionMethod').value;
@@ -234,11 +252,12 @@ async function extractDataFromPDF() {
         }
 
         if (pagesToProcess.length === 0) {
-            showStatus('No valid pages to process.', 'error');
+            showStatus(t('statusNoPages'), 'error');
             return;
         }
 
-        extractedData = [];
+        rawExtractedData = [];
+        lastExtractionRTL = false;
 
         for (let i = 0; i < pagesToProcess.length; i++) {
             const pageNum = pagesToProcess[i];
@@ -248,38 +267,131 @@ async function extractDataFromPDF() {
             const pageData = await extractDataFromPage(page, method);
 
             if (pageData.length > 0) {
-                extractedData.push(...pageData);
+                rawExtractedData.push(...pageData);
             }
         }
 
-        if (extractedData.length === 0) {
-            showStatus('No data found in the PDF. Try different extraction method.', 'error');
+        if (rawExtractedData.length === 0) {
+            showStatus(t('statusNoData'), 'error');
             hideProgress();
             return;
         }
 
-        extractedData = cleanAndStructureData(extractedData);
+        extractedData = cleanAndStructureData(rawExtractedData);
         showProgress(100);
 
         updatePreview();
         enableDownloads();
 
-        showStatus(`Successfully extracted ${extractedData.length} rows of data!`, 'success');
+        showStatus(t('statusExtractSuccess', { n: extractedData.length }), 'success');
         hideProgress();
 
     } catch (error) {
         console.error('Error extracting data:', error);
-        showStatus('Error extracting data from PDF.', 'error');
+        showStatus(t('statusErrorExtracting'), 'error');
         hideProgress();
     }
+}
+
+/* ===== Text Direction (RTL) Helpers ===== */
+const RTL_CHARS = /[֐-߿ࡠ-ࣿיִ-﷿ﹰ-﻿]/g;
+const LTR_CHARS = /[A-Za-z0-9]/g;
+
+function countMatches(str, re) {
+    const m = str.match(re);
+    return m ? m.length : 0;
+}
+
+// True when a string reads right-to-left (more Hebrew/Arabic chars than Latin/digits)
+function isRTLDominant(str) {
+    return countMatches(str, RTL_CHARS) > countMatches(str, LTR_CHARS);
+}
+
+function pageDirectionRTL(items) {
+    let rtl = 0, ltr = 0;
+    items.forEach(function (item) {
+        rtl += countMatches(item.str, RTL_CHARS);
+        ltr += countMatches(item.str, LTR_CHARS);
+    });
+    return rtl > ltr;
+}
+
+function rtlSupportEnabled() {
+    const el = document.getElementById('rtlSupport');
+    return el ? el.checked : false;
+}
+
+// Order fragments of one cell/line in reading order: RTL text runs
+// right-to-left across the page, so RTL content is joined by descending x
+// (rightmost fragment first). In an RTL context any fragment of RTL text
+// makes the whole cell read RTL; purely-LTR cells (numbers, English) keep
+// left-to-right order. Outside an RTL context, majority of RTL characters
+// decides.
+// Some producers overlay tiny fragments (a decimal point, a colon) on top of
+// a wider item that reserved blank space for them: "1 20" + "." at the gap's
+// x position is really "1.20". Fold such contained fragments back into their
+// host by replacing the space nearest to the fragment's position.
+function mergeContainedFragments(items) {
+    if (items.length < 2) return items;
+
+    const sorted = items.slice().sort(function (a, b) { return a.x - b.x || b.width - a.width; });
+    const out = [];
+
+    sorted.forEach(function (item) {
+        if (item.text && item.text.length <= 2) {
+            const host = out.find(function (h) {
+                return h.text.indexOf(' ') !== -1 &&
+                    item.x >= h.x && item.x + item.width <= h.x + h.width + 1;
+            });
+            if (host) {
+                const charPos = (item.x - host.x) / host.width * host.text.length;
+                let best = -1, bestDist = 2;
+                for (let i = 0; i < host.text.length; i++) {
+                    if (host.text[i] === ' ') {
+                        const d = Math.abs(i - charPos);
+                        if (d <= bestDist) { bestDist = d; best = i; }
+                    }
+                }
+                if (best !== -1) {
+                    host.text = host.text.slice(0, best) + item.text + host.text.slice(best + 1);
+                    return;
+                }
+            }
+        }
+        out.push({ text: item.text, x: item.x, width: item.width });
+    });
+
+    return out;
+}
+
+function joinItemsInReadingOrder(rawItems, contextRTL) {
+    const items = mergeContainedFragments(rawItems);
+    const texts = [];
+    let combined = '';
+    items.forEach(function (item) {
+        if (item.text) combined += item.text + ' ';
+    });
+    const readRTL = contextRTL ?
+        countMatches(combined, RTL_CHARS) > 0 :
+        isRTLDominant(combined);
+    const ordered = items.slice().sort(readRTL ?
+        function (a, b) { return b.x - a.x; } :
+        function (a, b) { return a.x - b.x; });
+    ordered.forEach(function (item) {
+        if (item.text) texts.push(item.text);
+    });
+    return texts.join(' ');
 }
 
 async function extractDataFromPage(page, method) {
     const textContent = await page.getTextContent();
     const viewport = page.getViewport({ scale: 1.0 });
 
+    const pageRTL = pageDirectionRTL(textContent.items);
+    if (pageRTL) lastExtractionRTL = true;
+
     if (method === 'table' || method === 'advanced') {
-        return extractTableData(textContent, viewport, method === 'advanced');
+        return extractTableData(textContent, viewport, method === 'advanced', pageRTL && rtlSupportEnabled());
     } else if (method === 'structured') {
         return extractStructuredData(textContent, viewport);
     } else {
@@ -287,92 +399,203 @@ async function extractDataFromPage(page, method) {
     }
 }
 
-function extractTableData(textContent, viewport, advanced) {
-    if (advanced === undefined) advanced = false;
-    const items = textContent.items;
-    const rows = [];
-    const tolerance = advanced ? 3 : 5;
+// Group text items into visual rows. Items are sorted by y (top to bottom)
+// and merged into the current row while their baseline stays within
+// `tolerance` of the row's baseline. This avoids the bucket-boundary splits
+// of fixed-grid rounding (e.g. y=12.4 vs y=12.6 landing in different buckets).
+function clusterRows(items, tolerance) {
+    // pdf.js emits whitespace spacer items whose intervals span the very gaps
+    // that separate columns - drop them so they cannot bridge separators.
+    const textItems = items.filter(function (item) { return item.str.trim() !== ''; });
+    if (textItems.length === 0) return [];
 
-    const rowGroups = {};
-    items.forEach(function (item) {
-        const y = Math.round(item.transform[5] / tolerance) * tolerance;
-        if (!rowGroups[y]) {
-            rowGroups[y] = [];
+    const sorted = textItems.sort(function (a, b) { return b.transform[5] - a.transform[5]; });
+
+    const rows = [];
+    let currentRow = null;
+    let currentY = null;
+
+    sorted.forEach(function (item) {
+        const y = item.transform[5];
+        if (currentRow === null || Math.abs(y - currentY) > tolerance) {
+            currentRow = [];
+            rows.push(currentRow);
+            currentY = y;
         }
-        rowGroups[y].push({
+        // pdf.js reports the rendered width of each item, but some producers
+        // (seen with LibreOffice exports) declare widths that overlap the
+        // neighbouring column. Clamp to a generous per-glyph estimate so an
+        // inflated width cannot bridge a column gap.
+        const fontSize = Math.abs(item.transform[0]) || 12;
+        const maxWidth = item.str.length * fontSize * 0.75;
+        currentRow.push({
             text: item.str.trim(),
             x: item.transform[4],
-            y: item.transform[5]
+            width: Math.min(item.width || maxWidth, maxWidth)
         });
     });
 
-    const sortedYs = Object.keys(rowGroups).map(Number).sort(function (a, b) { return b - a; });
-
-    sortedYs.forEach(function (y) {
-        const rowItems = rowGroups[y].sort(function (a, b) { return a.x - b.x; });
-        const rowData = [];
-
-        if (advanced) {
-            const columns = detectColumns(rowItems);
-            columns.forEach(function (col) {
-                rowData.push(col.text);
-            });
-        } else {
-            rowItems.forEach(function (item) {
-                if (item.text) {
-                    rowData.push(item.text);
-                }
-            });
-        }
-
-        if (rowData.length > 0) {
-            rows.push(rowData);
-        }
+    rows.forEach(function (row) {
+        row.sort(function (a, b) { return a.x - b.x; });
     });
 
     return rows;
 }
 
-function detectColumns(items) {
-    if (items.length === 0) return [];
+// Detect column boundaries for the whole page via a coverage histogram:
+// project every multi-item row onto the x-axis and count, per x position,
+// how many rows have text there. Ranges covered by more than ~a third of
+// the rows are columns; low-coverage ranges at least `minGap` wide are
+// separators. Occasional spanning lines (titles, total rows) cannot erase
+// a separator because they only add 1 to the coverage count, and alignment
+// (left/right/center) inside a column does not matter. A row with an empty
+// cell keeps its remaining cells in the right columns.
+function detectColumnIntervals(rows, minGap) {
+    const multiRows = rows.filter(function (row) {
+        return row.filter(function (item) { return item.text; }).length >= 2;
+    });
+    if (multiRows.length < 2) return [];
 
-    items.sort(function (a, b) { return a.x - b.x; });
+    let minX = Infinity, maxX = -Infinity;
+    multiRows.forEach(function (row) {
+        row.forEach(function (item) {
+            if (!item.text) return;
+            minX = Math.min(minX, item.x);
+            maxX = Math.max(maxX, item.x + item.width);
+        });
+    });
 
+    const size = Math.ceil(maxX - minX) + 1;
+    if (!isFinite(size) || size <= 0 || size > 50000) return [];
+
+    // per-1pt-bucket count of rows covering that x position
+    const coverage = new Array(size).fill(0);
+    multiRows.forEach(function (row) {
+        const covered = new Array(size).fill(false);
+        row.forEach(function (item) {
+            if (!item.text) return;
+            const from = Math.floor(item.x - minX);
+            const to = Math.min(size - 1, Math.ceil(item.x + item.width - minX));
+            for (let b = Math.max(0, from); b <= to; b++) covered[b] = true;
+        });
+        for (let b = 0; b < size; b++) {
+            if (covered[b]) coverage[b]++;
+        }
+    });
+
+    const threshold = Math.max(1, Math.floor(multiRows.length * 0.34));
+
+    // columns = maximal runs of coverage above the threshold; a below-threshold
+    // run only separates columns when it is at least minGap wide
     const columns = [];
-    let currentColumn = { text: items[0].text, x: items[0].x };
-
-    for (let i = 1; i < items.length; i++) {
-        const item = items[i];
-        const gap = item.x - (currentColumn.x + currentColumn.text.length * 6);
-
-        if (gap > 20) {
-            columns.push(currentColumn);
-            currentColumn = { text: item.text, x: item.x };
-        } else {
-            currentColumn.text += ' ' + item.text;
+    let runStart = -1;
+    for (let b = 0; b <= size; b++) {
+        const isColumn = b < size && coverage[b] > threshold;
+        if (isColumn && runStart === -1) {
+            runStart = b;
+        } else if (!isColumn && runStart !== -1) {
+            columns.push([minX + runStart, minX + b - 1]);
+            runStart = -1;
         }
     }
 
-    columns.push(currentColumn);
-    return columns;
+    // merge columns separated by less than minGap (word spacing, not a column gap)
+    const merged = [];
+    columns.forEach(function (col) {
+        const last = merged[merged.length - 1];
+        if (last && col[0] - last[1] < minGap) {
+            last[1] = col[1];
+        } else {
+            merged.push(col.slice());
+        }
+    });
+
+    // drop slivers: a real column is at least minGap wide; narrower runs are
+    // coincidental overlaps of item tails from different columns
+    return merged.filter(function (col) { return col[1] - col[0] >= minGap; });
+}
+
+// Find the column an item belongs to: the column containing its left edge
+// (also correct for items spanning several columns, e.g. total lines), then
+// the column containing its center, then the nearest column edge.
+function columnIndexFor(item, columns) {
+    const center = item.x + item.width / 2;
+
+    let nearest = 0;
+    let nearestDist = Infinity;
+    let centerMatch = -1;
+
+    for (let i = 0; i < columns.length; i++) {
+        // 2pt slack: spanning lines often start a hair left of the column edge
+        if (item.x >= columns[i][0] - 2 && item.x <= columns[i][1]) {
+            return i;
+        }
+        if (centerMatch === -1 && center >= columns[i][0] && center <= columns[i][1]) {
+            centerMatch = i;
+        }
+        const dist = Math.min(Math.abs(center - columns[i][0]), Math.abs(center - columns[i][1]));
+        if (dist < nearestDist) {
+            nearestDist = dist;
+            nearest = i;
+        }
+    }
+
+    return centerMatch !== -1 ? centerMatch : nearest;
+}
+
+function extractTableData(textContent, viewport, advanced, rtlTable) {
+    if (advanced === undefined) advanced = false;
+    // Advanced mode clusters rows tighter and treats narrower gaps as
+    // column separators (more columns, finer tables). Gaps must stay above
+    // typical word spacing (~3-4pt at 12pt text) but below cell padding.
+    const rowTolerance = advanced ? 3 : 5;
+    const minGap = advanced ? 3 : 5;
+
+    const rowItems = clusterRows(textContent.items, rowTolerance);
+    const columns = detectColumnIntervals(rowItems, minGap);
+
+    // No usable column structure on this page - fall back to
+    // one cell per text item (reading order for RTL pages).
+    if (columns.length <= 1) {
+        return rowItems.map(function (row) {
+            const cells = row.filter(function (item) { return item.text; });
+            if (rtlTable) cells.reverse();
+            return cells.map(function (item) { return item.text; });
+        }).filter(function (row) { return row.length > 0; });
+    }
+
+    const rows = [];
+    rowItems.forEach(function (row) {
+        const cellItems = columns.map(function () { return []; });
+        let hasText = false;
+
+        row.forEach(function (item) {
+            if (!item.text) return;
+            cellItems[columnIndexFor(item, columns)].push(item);
+            hasText = true;
+        });
+
+        if (!hasText) return;
+
+        const rowData = cellItems.map(function (items) {
+            return items.length > 0 ? joinItemsInReadingOrder(items, rtlTable) : '';
+        });
+
+        // In an RTL table the first logical column is the rightmost one
+        if (rtlTable) rowData.reverse();
+
+        rows.push(rowData);
+    });
+
+    return rows;
 }
 
 function extractStructuredData(textContent, viewport) {
-    const items = textContent.items;
     const lines = [];
+    const pageRTL = pageDirectionRTL(textContent.items);
 
-    const lineGroups = {};
-    items.forEach(function (item) {
-        const y = Math.round(item.transform[5]);
-        if (!lineGroups[y]) {
-            lineGroups[y] = [];
-        }
-        lineGroups[y].push(item);
-    });
-
-    Object.keys(lineGroups).sort(function (a, b) { return b - a; }).forEach(function (y) {
-        const lineItems = lineGroups[y].sort(function (a, b) { return a.transform[4] - b.transform[4]; });
-        const lineText = lineItems.map(function (item) { return item.str.trim(); }).filter(function (text) { return text; }).join(' ');
+    clusterRows(textContent.items, 2).forEach(function (row) {
+        const lineText = joinItemsInReadingOrder(row, pageRTL);
 
         if (lineText) {
             const structuredData = parseStructuredLine(lineText);
@@ -397,7 +620,13 @@ function parseStructuredLine(text) {
     for (const pattern of patterns) {
         const matches = [...text.matchAll(pattern)];
         if (matches.length > 0) {
-            return matches.map(function (match) { return match[2].trim(); });
+            // Emit key/value pairs so labels are not lost:
+            // "Name: John, Age: 30" -> ["Name", "John", "Age", "30"]
+            const cells = [];
+            matches.forEach(function (match) {
+                cells.push(match[1].trim(), match[2].trim());
+            });
+            return cells;
         }
     }
 
@@ -412,20 +641,11 @@ function parseStructuredLine(text) {
 }
 
 function extractTextData(textContent) {
-    const items = textContent.items;
     const lines = [];
+    const pageRTL = pageDirectionRTL(textContent.items);
 
-    const lineGroups = {};
-    items.forEach(function (item) {
-        const y = Math.round(item.transform[5]);
-        if (!lineGroups[y]) {
-            lineGroups[y] = [];
-        }
-        lineGroups[y].push(item.str.trim());
-    });
-
-    Object.keys(lineGroups).sort(function (a, b) { return b - a; }).forEach(function (y) {
-        const lineText = lineGroups[y].filter(function (text) { return text; }).join(' ');
+    clusterRows(textContent.items, 2).forEach(function (row) {
+        const lineText = joinItemsInReadingOrder(row, pageRTL);
         if (lineText) {
             lines.push([lineText]);
         }
@@ -473,7 +693,8 @@ function mergeTextFragments(data) {
 function normalizeColumns(data) {
     if (data.length === 0) return data;
 
-    const maxColumns = Math.max(...data.map(function (row) { return row.length; }));
+    // reduce, not Math.max(...spread) - spreading huge arrays overflows the stack
+    const maxColumns = data.reduce(function (max, row) { return Math.max(max, row.length); }, 0);
 
     return data.map(function (row) {
         const normalizedRow = [...row];
@@ -519,19 +740,26 @@ function updatePreview() {
     const header = document.getElementById('previewHeader');
     const body = document.getElementById('previewBody');
 
+    // RTL document: lay the preview table out right-to-left so
+    // column 1 (the rightmost column in the PDF) renders on the right
+    const previewTable = document.getElementById('previewTable');
+    if (previewTable) {
+        previewTable.dir = (lastExtractionRTL && rtlSupport) ? 'rtl' : 'ltr';
+    }
+
     header.innerHTML = '';
     body.innerHTML = '';
 
     if (previewData.length === 0) return;
 
     const headerRow = document.createElement('tr');
-    const maxColumns = Math.max(...previewData.map(function (row) { return row.length; }));
+    const maxColumns = previewData.reduce(function (max, row) { return Math.max(max, row.length); }, 0);
 
     for (let i = 0; i < maxColumns; i++) {
         const th = document.createElement('th');
         th.textContent = includeHeaders && previewData[0] ?
-            (previewData[0][i] || `Column ${i + 1}`) :
-            `Column ${i + 1}`;
+            (previewData[0][i] || t('columnLabel', { n: i + 1 })) :
+            t('columnLabel', { n: i + 1 });
         headerRow.appendChild(th);
     }
     header.appendChild(headerRow);
@@ -576,6 +804,9 @@ function downloadFile(format) {
 // with a formula trigger a spreadsheet app may auto-evaluate it on open. Prefix
 // such values with a single quote so they are treated as literal text. Plain
 // numbers (including negatives) are left untouched.
+// Applied to CSV only: SheetJS writes .xlsx values as string-typed cells,
+// which spreadsheet apps never evaluate as formulas, so the .xlsx path keeps
+// the original text unmangled.
 function sanitizeCell(value) {
     const str = (value === null || value === undefined) ? '' : value.toString();
     if (/^[=+\-@\t\r]/.test(str) && !/^-?\d+(?:\.\d+)?$/.test(str)) {
@@ -584,26 +815,31 @@ function sanitizeCell(value) {
     return str;
 }
 
-function sanitizeData(data) {
-    return data.map(function (row) {
-        return row.map(sanitizeCell);
-    });
-}
-
 function downloadExcelFile(data, includeHeaders) {
     try {
-        const ws = XLSX.utils.aoa_to_sheet(sanitizeData(data));
+        const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
 
         const colWidths = [];
         if (data.length > 0) {
             for (let i = 0; i < data[0].length; i++) {
-                const maxLength = Math.max(
-                    ...data.map(function (row) { return (row[i] || '').toString().length; })
-                );
+                // reduce, not Math.max(...spread) - spreading huge arrays overflows the stack
+                const maxLength = data.reduce(function (max, row) {
+                    return Math.max(max, (row[i] || '').toString().length);
+                }, 0);
                 colWidths.push({ width: Math.min(Math.max(maxLength, 10), 50) });
             }
             ws['!cols'] = colWidths;
+        }
+
+        // First row is a header row - make it filterable in Excel
+        if (includeHeaders && ws['!ref']) {
+            ws['!autofilter'] = { ref: ws['!ref'] };
+        }
+
+        // RTL document: display the sheet right-to-left in Excel
+        if (lastExtractionRTL && rtlSupportEnabled()) {
+            wb.Workbook = { Views: [{ RTL: true }] };
         }
 
         XLSX.utils.book_append_sheet(wb, ws, 'Converted Data');
@@ -614,11 +850,11 @@ function downloadExcelFile(data, includeHeaders) {
         });
 
         downloadBlob(blob, `${fileName}_converted.xlsx`);
-        showStatus('📊 Excel file downloaded successfully!', 'success');
+        showStatus(t('statusExcelDone'), 'success');
 
     } catch (error) {
         console.error('Error creating Excel file:', error);
-        showStatus('Error creating Excel file.', 'error');
+        showStatus(t('statusExcelError'), 'error');
     }
 }
 
@@ -627,7 +863,7 @@ function downloadCSVFile(data, includeHeaders) {
         const csvContent = data.map(function (row) {
             return row.map(function (cell) {
                 const cellStr = sanitizeCell(cell);
-                if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n') || cellStr.includes('\r')) {
                     return `"${cellStr.replace(/"/g, '""')}"`;
                 }
                 return cellStr;
@@ -639,11 +875,11 @@ function downloadCSVFile(data, includeHeaders) {
         });
 
         downloadBlob(blob, `${fileName}_converted.csv`);
-        showStatus('📋 CSV file downloaded successfully!', 'success');
+        showStatus(t('statusCsvDone'), 'success');
 
     } catch (error) {
         console.error('Error creating CSV file:', error);
-        showStatus('Error creating CSV file.', 'error');
+        showStatus(t('statusCsvError'), 'error');
     }
 }
 
@@ -661,8 +897,8 @@ function downloadBlob(blob, filename) {
 
 /* ===== Utility Functions ===== */
 function showFileInfo(file) {
-    document.getElementById('fileName').textContent = `📄 File: ${file.name}`;
-    document.getElementById('fileSize').textContent = `💾 Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+    document.getElementById('fileName').textContent = t('fileLabel', { name: file.name });
+    document.getElementById('fileSize').textContent = t('fileSizeLabel', { size: (file.size / 1024 / 1024).toFixed(2) });
     fileInfo.style.display = 'block';
 }
 
@@ -899,7 +1135,25 @@ const translations = {
         footerLink2: "NX1X Lab",
         footerLink3: "GitHub",
         footerPrivacy: "<strong>Privacy:</strong> Your PDFs are processed entirely in your browser. No files are uploaded to any server. Anonymous usage analytics via Cloudflare Analytics.",
-        footerCopyright: `© ${currentYear} NX1X.`
+        footerCopyright: `© ${currentYear} NX1X.`,
+        statusVerify: "Please complete the security verification below to proceed.",
+        statusLoading: "Loading PDF file...",
+        statusExtracting: "Extracting data from PDF...",
+        statusExtractSuccess: "Successfully extracted {n} rows of data!",
+        statusNoData: "No data found in the PDF. Try different extraction method.",
+        statusNoPages: "No valid pages to process.",
+        statusErrorProcessing: "Error processing PDF file. Please try again.",
+        statusErrorExtracting: "Error extracting data from PDF.",
+        statusInvalidFile: "Please select a valid PDF file.",
+        statusDropInvalid: "Please drop a valid PDF file.",
+        statusExcelDone: "📊 Excel file downloaded successfully!",
+        statusExcelError: "Error creating Excel file.",
+        statusCsvDone: "📋 CSV file downloaded successfully!",
+        statusCsvError: "Error creating CSV file.",
+        pageCountLabel: "Pages: {n}",
+        columnLabel: "Column {n}",
+        fileLabel: "📄 File: {name}",
+        fileSizeLabel: "💾 Size: {size} MB"
     },
     he: {
         mainTitle: "EasyConvert",
@@ -940,9 +1194,40 @@ const translations = {
         footerLink2: "NX1X Lab",
         footerLink3: "GitHub",
         footerPrivacy: "<strong>פרטיות:</strong> קבצי ה-PDF שלכם מעובדים לחלוטין בדפדפן שלכם. לא מועלים קבצים לשום שרת. אנליטיקה אנונימית בסיסית דרך Cloudflare Analytics.",
-        footerCopyright: `© ${currentYear} NX1X.`
+        footerCopyright: `© ${currentYear} NX1X.`,
+        statusVerify: "אנא השלימו את אימות האבטחה למטה כדי להמשיך.",
+        statusLoading: "טוען קובץ PDF...",
+        statusExtracting: "מחלץ נתונים מה-PDF...",
+        statusExtractSuccess: "חולצו {n} שורות נתונים בהצלחה!",
+        statusNoData: "לא נמצאו נתונים ב-PDF. נסו שיטת חילוץ אחרת.",
+        statusNoPages: "אין עמודים תקינים לעיבוד.",
+        statusErrorProcessing: "שגיאה בעיבוד קובץ ה-PDF. אנא נסו שוב.",
+        statusErrorExtracting: "שגיאה בחילוץ נתונים מה-PDF.",
+        statusInvalidFile: "אנא בחרו קובץ PDF תקין.",
+        statusDropInvalid: "אנא גררו קובץ PDF תקין.",
+        statusExcelDone: "📊 קובץ אקסל הורד בהצלחה!",
+        statusExcelError: "שגיאה ביצירת קובץ אקסל.",
+        statusCsvDone: "📋 קובץ CSV הורד בהצלחה!",
+        statusCsvError: "שגיאה ביצירת קובץ CSV.",
+        pageCountLabel: "עמודים: {n}",
+        columnLabel: "עמודה {n}",
+        fileLabel: "📄 קובץ: {name}",
+        fileSizeLabel: "💾 גודל: {size} MB"
     }
 };
+
+// Translate a status/label key in the current language, with {param} substitution.
+// Falls back to English, then to the key itself.
+function t(key, params) {
+    let str = (translations[currentLanguage] && translations[currentLanguage][key]) ||
+        translations.en[key] || key;
+    if (params) {
+        Object.keys(params).forEach(function (name) {
+            str = str.replace('{' + name + '}', params[name]);
+        });
+    }
+    return str;
+}
 
 function toggleLanguage() {
     currentLanguage = currentLanguage === 'en' ? 'he' : 'en';
