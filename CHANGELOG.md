@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Excel exports of RTL documents open with a right-to-left sheet view, and the data preview lays out right-to-left for RTL documents
 - "Include Headers" now adds an Excel autofilter to the header row, making the exported sheet filterable
 - Fully bilingual status messages: progress, errors, file info, page count, and column labels now follow the selected language
+- Footer now shows the GitHub logo linking to the source repository and an Apache License 2.0 notice (bilingual)
+- Release workflow (`.github/workflows/release.yml`): pushing a `v*` tag (or a manual dispatch) creates the GitHub Release with the matching CHANGELOG section as notes
 
 ### Changed
 
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleanup options (Skip Empty Rows, Merge Fragments, Auto-detect Columns) are now non-destructive: unchecking an option restores the original extracted data
 - Turnstile verification is required once per session instead of once per file
 - "Hebrew/Arabic RTL Support" is now enabled by default (it only activates on documents detected as RTL)
+- `scripts/release.sh` reworked for the PR-based flow: it now only validates and pushes the version tag (the version bump and CHANGELOG entry come from the PR, the GitHub Release comes from the release workflow)
 
 ### Fixed
 
