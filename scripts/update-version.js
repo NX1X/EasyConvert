@@ -49,6 +49,33 @@ try {
     fs.writeFileSync(readmePath, readmeContent);
     console.log(`✅ Updated README.md version badges`);
 
+    // Update the cache-busting query on the app shell assets. app.js and
+    // style.css are not fingerprinted, so this query string is what forces
+    // browsers and the Cloudflare edge to pick up a new build.
+    const indexPath = path.join(__dirname, '..', 'public', 'index.html');
+    let indexContent = fs.readFileSync(indexPath, 'utf8');
+    indexContent = indexContent.replace(
+        /(href="style\.css\?v=)\d+\.\d+\.\d+(")/g,
+        `$1${newVersion}$2`
+    );
+    indexContent = indexContent.replace(
+        /(src="app\.js\?v=)\d+\.\d+\.\d+(")/g,
+        `$1${newVersion}$2`
+    );
+    fs.writeFileSync(indexPath, indexContent);
+    console.log(`✅ Updated public/index.html asset cache-busting query`);
+
+    // Update the service worker version (drives CACHE_NAME and the precached
+    // app-shell URLs, so old caches are purged on activate)
+    const swPath = path.join(__dirname, '..', 'public', 'sw.js');
+    let swContent = fs.readFileSync(swPath, 'utf8');
+    swContent = swContent.replace(
+        /(const APP_VERSION = ')\d+\.\d+\.\d+(')/,
+        `$1${newVersion}$2`
+    );
+    fs.writeFileSync(swPath, swContent);
+    console.log(`✅ Updated public/sw.js APP_VERSION`);
+
     // Update CHANGELOG.md
     const changelogPath = path.join(__dirname, '..', 'CHANGELOG.md');
     const changelogContent = fs.readFileSync(changelogPath, 'utf8');

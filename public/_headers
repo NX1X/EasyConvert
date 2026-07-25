@@ -1,3 +1,14 @@
+# NOTE: this file is not the whole story in production. Cloudflare adds or
+# overrides some headers at the zone level, so what ships can differ from what
+# is written here. Observed on convert.nx1xlab.dev:
+#   - X-Frame-Options arrives as SAMEORIGIN, not the DENY set below (CSP
+#     frame-ancestors 'none' still holds, so only legacy browsers are affected)
+#   - Referrer-Policy arrives as same-origin, not strict-origin-when-cross-origin
+#   - Access-Control-Allow-Origin: * is added by Pages on static assets
+#   - a deprecated Expect-CT header is added
+# Fixing those means changing the Cloudflare zone config (Transform Rules /
+# managed headers), not this file. Re-check with:
+#   curl -sSI https://convert.nx1xlab.dev/ | grep -i 'x-frame\|referrer\|access-control'
 /*
   # Clickjacking protection
   X-Frame-Options: DENY
@@ -37,18 +48,33 @@
   #   - static.cloudflareinsights.com: Cloudflare Web Analytics beacon (script + beacon POST)
   Content-Security-Policy: default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self'; img-src 'self' data: https://challenges.cloudflare.com; font-src 'self' data:; connect-src 'self' https://challenges.cloudflare.com https://cdnjs.cloudflare.com https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; worker-src 'self' blob: https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
 
+# Caching
+# app.js and style.css are NOT fingerprinted (no content hash in the filename),
+# so they must never be cached immutably: a long max-age froze a year-old app.js
+# at the edge and shipped it to every visitor while the origin already had the
+# current build. They revalidate on every request instead (ETag makes that a
+# cheap 304). index.html references them with a ?v=<version> query as a second
+# layer, so a bumped release busts any intermediary cache that ignores this.
 /*.html
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=0, must-revalidate
 
 /*.js
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=0, must-revalidate
 
 /*.css
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Icons and the social card are content-stable and their names change when the
+# artwork does, so they can be cached for a day.
+/*.png
+  Cache-Control: public, max-age=86400
+
+/*.svg
+  Cache-Control: public, max-age=86400
 
 /manifest.json
   Cache-Control: public, max-age=86400
   Content-Type: application/manifest+json
 
 /sw.js
-  Cache-Control: public, max-age=0
+  Cache-Control: public, max-age=0, must-revalidate

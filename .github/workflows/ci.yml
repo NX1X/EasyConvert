@@ -26,6 +26,9 @@ jobs:
       - name: Check pinned cdnjs versions and SRI hashes
         run: bash scripts/check-cdn-versions.sh
 
+      - name: Check app version is in sync across package.json, sw.js, index.html
+        run: bash scripts/check-version-sync.sh
+
   action-pinning:
     name: Actions pinned to SHA
     runs-on: ubuntu-latest

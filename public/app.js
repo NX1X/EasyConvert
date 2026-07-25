@@ -165,6 +165,21 @@ function isPDFFile(file) {
     return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 }
 
+// The uploaded name becomes the download name. The app always appends its own
+// _converted.xlsx/.csv suffix, so the real extension is never attacker-chosen,
+// but bidi overrides and control characters can still make the name displayed
+// in the save dialog misleading. Strip them, drop path separators, and cap the
+// length so the suggested name stays readable.
+function sanitizeFileName(name) {
+    const cleaned = name
+        .replace(/[\u202a-\u202e\u2066-\u2069\u200e\u200f\u061c]/g, '')
+        .replace(/[\x00-\x1f\x7f]/g, '')
+        .replace(/[\\/:*?"<>|]/g, '_')
+        .replace(/^\.+/, '')
+        .trim();
+    return cleaned.slice(0, 100) || 'document';
+}
+
 function handleDrop(event) {
     event.preventDefault();
     uploadSection.classList.remove('dragover');
@@ -189,7 +204,7 @@ async function processFile(file) {
         currentPDF = null;
     }
 
-    fileName = file.name.replace(/\.pdf$/i, '');
+    fileName = sanitizeFileName(file.name.replace(/\.pdf$/i, ''));
     showFileInfo(file);
 
     // Already verified this session - skip straight to processing
