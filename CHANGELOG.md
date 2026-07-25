@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-07-25
+
+### Fixed
+
+- The footer copyright year never appeared: the language initialiser only re-rendered the page when a saved language differed from the current one, so a visitor using the default language kept the static placeholder. The year is now always rendered, and an unrecognised saved language falls back to English instead of blanking the interface
+
+### Changed
+
+- The licence notice and copyright now share a single bottom bar, separated by a dot and wrapping cleanly on narrow screens, instead of sitting as two stacked lines above and below the divider
+- The licence link is underlined on hover rather than permanently, with a visible keyboard focus state
+- `.gitignore` also covers JetBrains and workspace files, Windows shell artefacts, editor backups, and key material (`*.pem`, `*.key`, `*.p12`, `*.pfx`, `.dev.vars`, `.wrangler/`)
+- `.cfignore` now excludes environment files and key material as well, so a misconfigured root-directory deploy could not serve them
+
 ## [1.5.0] - 2026-07-25
 
 ### Added

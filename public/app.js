@@ -1171,7 +1171,7 @@ const translations = {
         footerLink3: "GitHub",
         footerPrivacy: "<strong>Privacy:</strong> Your PDFs are processed entirely in your browser. No files are uploaded to any server. Anonymous usage analytics via Cloudflare Analytics.",
         footerLicense: 'Open source under the <a href="https://github.com/NX1X/EasyConvert/blob/main/LICENSE" target="_blank" rel="noopener">Apache License 2.0</a>',
-        footerCopyright: `© ${currentYear} NX1X.`,
+        footerCopyright: `© ${currentYear} NX1X`,
         statusVerify: "Please complete the security verification below to proceed.",
         statusLoading: "Loading PDF file...",
         statusExtracting: "Extracting data from PDF...",
@@ -1231,7 +1231,7 @@ const translations = {
         footerLink3: "GitHub",
         footerPrivacy: "<strong>פרטיות:</strong> קבצי ה-PDF שלכם מעובדים לחלוטין בדפדפן שלכם. לא מועלים קבצים לשום שרת. אנליטיקה אנונימית בסיסית דרך Cloudflare Analytics.",
         footerLicense: 'קוד פתוח תחת <a href="https://github.com/NX1X/EasyConvert/blob/main/LICENSE" target="_blank" rel="noopener">רישיון Apache 2.0</a>',
-        footerCopyright: `© ${currentYear} NX1X.`,
+        footerCopyright: `© ${currentYear} NX1X`,
         statusVerify: "אנא השלימו את אימות האבטחה למטה כדי להמשיך.",
         statusLoading: "טוען קובץ PDF...",
         statusExtracting: "מחלץ נתונים מה-PDF...",
@@ -1343,10 +1343,13 @@ function updateLanguage() {
 
 function initializeLanguage() {
     const savedLanguage = localStorage.getItem('easyconvert-language');
-    if (savedLanguage && savedLanguage !== currentLanguage) {
+    if (savedLanguage && translations[savedLanguage]) {
         currentLanguage = savedLanguage;
-        updateLanguage();
     }
+    // Always run: parts of the page are only produced here (the copyright
+    // year, for example), so skipping this when the language already matches
+    // would leave that static placeholder text in place.
+    updateLanguage();
 }
 
 document.addEventListener('DOMContentLoaded', initializeLanguage);
