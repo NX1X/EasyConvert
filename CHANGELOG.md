@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-07-25
+
+### Fixed
+
+- Production was serving a year-old `app.js`: the cache rules gave the non-fingerprinted `app.js` and `style.css` a one-year `max-age`, so the edge kept shipping a stale build while the origin already had the current one, and none of the 1.4.0 or 1.5.0 fixes reached visitors. Both files now revalidate on every request, and `index.html` references them with a `?v=<version>` query that the release script keeps in step with `package.json`
+
+### Changed
+
+- The service worker serves the app shell network-first and falls back to the cache only when offline (it was cache-first, which pinned whatever build happened to be cached). Version-pinned CDN libraries stay cache-first, and cross-origin requests are no longer intercepted at all
+- Cross-origin requests are passed straight through, so a failed Turnstile or analytics request can never be answered from the cache
+
+### Security
+
+- Download names derived from the uploaded file now have bidi override characters, control characters and path separators stripped, and are length-capped, so a crafted filename cannot make the name shown in the save dialog misleading (the real extension was never attacker-controlled - the app always appends its own `_converted.xlsx`/`.csv`)
+- New CI check (`scripts/check-version-sync.sh`): fails the build when the version in `package.json`, `sw.js`, and the `index.html` asset queries drift apart, or when an app-shell asset is referenced without a cache-busting query
+
 ## [1.5.1] - 2026-07-25
 
 ### Fixed
