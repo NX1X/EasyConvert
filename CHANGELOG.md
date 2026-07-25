@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0] - 2026-07-25
 
+### Added
+
+- New monochrome logo and icon: a grid monogram that forms an "E" from table cells, matching the app's soft-black palette (the previous mark was a blue-to-green gradient that predated the monochrome redesign)
+- Proper icon set: PNG favicons (16 and 32), an Apple touch icon, and 192/512 PWA icons alongside the SVG
+- Link preview support: a 1200x630 social card (`og-image.png`) plus OpenGraph and Twitter card metadata, so shared links and the GitHub social preview render with the brand card
+
+### Changed
+
+- The PWA manifest now lists raster icons at the sizes installers expect, and the service worker precaches the new favicon set
+
 ### Security
 
 - Table extraction hardened against denial-of-service PDFs: the column-detection histogram is built from a difference array (O(items + size) instead of O(rows x size) work), and fragment merging skips rows with more than 400 fragments, so a crafted PDF degrades gracefully instead of freezing the tab
@@ -17,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Renovate's custom cdnjs manager now matches the single-quoted library URLs in `app.js` and `sw.js`; previously only `index.html` was tracked, so automated library updates would have left the PDF.js worker and the service-worker cache list on the old version
+- The `_worker.js` asset allowlist now matches the icons that actually ship (it previously listed `/icons/icon-192x192.png` and `/icons/icon-512x512.png`, paths that did not exist)
 
 ## [1.4.0] - 2026-07-25
 
