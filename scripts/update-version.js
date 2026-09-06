@@ -51,7 +51,7 @@ try {
 
     // Update the cache-busting query on the app shell assets. app.js and
     // style.css are not fingerprinted, so this query string is what forces
-    // browsers and the Cloudflare edge to pick up a new build.
+    // browsers and any intermediary cache to pick up a new build.
     const indexPath = path.join(__dirname, '..', 'public', 'index.html');
     let indexContent = fs.readFileSync(indexPath, 'utf8');
     indexContent = indexContent.replace(

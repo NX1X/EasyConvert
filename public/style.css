@@ -312,52 +312,6 @@ body {
     background: var(--primary-hover);
 }
 
-/* Turnstile */
-#turnstileContainer {
-    display: none;
-    margin-top: 20px;
-    text-align: center;
-}
-
-.security-verification-text {
-    margin-bottom: 15px;
-    color: #4a5568;
-    font-size: 0.9rem;
-}
-
-#turnstileFallback {
-    display: none;
-    margin-top: 15px;
-    padding: 16px;
-    border: 1px solid #fca5a5;
-    border-radius: 8px;
-    background: #fef2f2;
-}
-
-.turnstile-error-title {
-    color: #7f1d1d;
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.turnstile-error-desc {
-    color: #991b1b;
-    font-size: 0.8rem;
-    margin-bottom: 12px;
-}
-
-.turnstile-reload-btn {
-    background: #18181b;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
 .file-info {
     background: #fafafa;
     border: 1px solid var(--border);

@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Check pinned cdnjs versions and SRI hashes
+      - name: Check vendored library files are present and consistently referenced
         run: bash scripts/check-cdn-versions.sh
 
       - name: Check app version is in sync across package.json, sw.js, index.html
