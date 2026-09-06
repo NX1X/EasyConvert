@@ -1,4 +1,4 @@
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.5.3';
 const CACHE_NAME = `easyconvert-v${APP_VERSION}`;
 
 // Same-origin app shell. These filenames are not fingerprinted, so they are
