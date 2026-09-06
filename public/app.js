@@ -1,44 +1,9 @@
-/* ===== Turnstile Script Loader (formerly inline <script> in <head>) ===== */
-window.turnstileScriptLoaded = false;
-window.turnstileLoadError = false;
-
-const turnstileScript = document.createElement('script');
-// Turnstile is served from a non-versioned, frequently-rotated Cloudflare
-// endpoint that does not support SRI - intentionally no integrity attribute.
-turnstileScript.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback';
-turnstileScript.async = true;
-turnstileScript.defer = true;
-
-turnstileScript.onload = function () {
-    console.log('✅ Turnstile script loaded successfully');
-    window.turnstileScriptLoaded = true;
-};
-
-turnstileScript.onerror = function () {
-    console.error('❌ Failed to load Turnstile script from challenges.cloudflare.com');
-    window.turnstileLoadError = true;
-    showTurnstileError();
-};
-
-document.head.appendChild(turnstileScript);
-
-// Timeout fallback: if Turnstile hasn't loaded in 5s, show error
-setTimeout(function () {
-    if (!window.turnstileScriptLoaded && !window.turnstileLoadError) {
-        console.warn('⚠️ Turnstile script loading timeout (5s)');
-        window.turnstileLoadError = true;
-        showTurnstileError();
-    }
-}, 5000);
-
 /* ===== Global Variables ===== */
 let currentPDF = null;
 let rawExtractedData = []; // untouched extraction result; cleanup options always re-derive from this
 let extractedData = [];
 let lastExtractionRTL = false; // any processed page was RTL-dominant (drives preview dir + Excel RTL view)
 let fileName = '';
-let turnstileVerified = false;
-let pendingFile = null;
 
 /* ===== DOM Element References ===== */
 const uploadSection = document.getElementById('uploadSection');
@@ -51,15 +16,12 @@ const optionsSection = document.getElementById('optionsSection');
 const previewSection = document.getElementById('previewSection');
 const downloadExcel = document.getElementById('downloadExcel');
 const downloadCSV = document.getElementById('downloadCSV');
-const turnstileContainer = document.getElementById('turnstileContainer');
 
 /* ===== PDF.js Worker ===== */
-// The pdf.js version here MUST match the pdf.min.js version in index.html and
-// the cached URLs in sw.js. Renovate keeps all three in lockstep (see
-// .github/renovate.json custom cdnjs manager). The Worker API has no SRI, so
-// integrity is enforced only via CSP worker-src in public/_headers.
+// The pdf.js version here MUST match public/vendor/pdf.min.js and the cached
+// URLs in sw.js. All three are self-hosted; bump them together.
 if (typeof pdfjsLib !== 'undefined') {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdf.worker.min.js';
 }
 
 /* ===== Event Listeners ===== */
@@ -83,9 +45,6 @@ document.getElementById('helpBtn').addEventListener('click', openHelpGuide);
 
 // Upload button - also opens file input (section click also does this; double-call is harmless)
 document.getElementById('uploadBtn').addEventListener('click', function () { fileInput.click(); });
-
-// Turnstile fallback reload button
-document.getElementById('turnstileReloadBtn').addEventListener('click', function () { location.reload(); });
 
 // Download buttons
 document.getElementById('downloadExcel').addEventListener('click', function () { downloadFile('excel'); });
@@ -207,21 +166,10 @@ async function processFile(file) {
     fileName = sanitizeFileName(file.name.replace(/\.pdf$/i, ''));
     showFileInfo(file);
 
-    // Already verified this session - skip straight to processing
-    if (turnstileVerified) {
-        processPDFAfterVerification(file);
-        return;
-    }
-
-    // Show Turnstile verification before processing
-    pendingFile = file;
-    turnstileContainer.style.display = 'block';
-    showStatus(t('statusVerify'), 'info');
-
-    renderTurnstileWidget();
+    processPDF(file);
 }
 
-async function processPDFAfterVerification(file) {
+async function processPDF(file) {
     showProgress(10);
     showStatus(t('statusLoading'), 'info');
 
@@ -1057,81 +1005,6 @@ function trackSocialShare(platform) {
     console.log('Social share:', platform);
 }
 
-/* ===== Cloudflare Turnstile ===== */
-let turnstileWidgetId = null;
-
-// Called when Turnstile script loads via ?onload=onloadTurnstileCallback
-window.onloadTurnstileCallback = function () {
-    console.log('✅ Turnstile callback executed - script ready');
-    window.turnstileScriptLoaded = true;
-};
-
-function showTurnstileError() {
-    const fallback = document.getElementById('turnstileFallback');
-    if (fallback) fallback.style.display = 'block';
-}
-
-function renderTurnstileWidget() {
-    const widget = document.getElementById('turnstileWidget');
-
-    // Script failed to load - show error, no bypass
-    if (window.turnstileLoadError) {
-        console.warn('Turnstile script failed to load');
-        showTurnstileError();
-        return;
-    }
-
-    // Script still loading - retry once after 2s, then show error
-    if (!window.turnstileScriptLoaded) {
-        setTimeout(function () {
-            if (window.turnstileScriptLoaded) {
-                renderTurnstileWidget();
-            } else {
-                console.warn('Turnstile script load timeout');
-                showTurnstileError();
-            }
-        }, 2000);
-        return;
-    }
-
-    if (typeof turnstile !== 'undefined' && widget) {
-        try {
-            widget.innerHTML = '';
-            turnstileWidgetId = turnstile.render('#turnstileWidget', {
-                sitekey: '0x4AAAAAABgnH-kcJlEFNqBe',
-                callback: onTurnstileSuccess,
-                'error-callback': onTurnstileError,
-                theme: 'light',
-                size: 'normal'
-            });
-            if (!turnstileWidgetId) {
-                console.warn('Turnstile render returned no ID');
-                showTurnstileError();
-            }
-        } catch (error) {
-            console.error('Turnstile render threw:', error);
-            showTurnstileError();
-        }
-    } else {
-        console.warn('Turnstile object not available');
-        showTurnstileError();
-    }
-}
-
-function onTurnstileSuccess(token) {
-    turnstileVerified = true;
-    turnstileContainer.style.display = 'none';
-    if (pendingFile) {
-        processPDFAfterVerification(pendingFile);
-        pendingFile = null;
-    }
-}
-
-function onTurnstileError(error) {
-    console.error('Turnstile verification error:', error);
-    showTurnstileError();
-}
-
 /* ===== Service Worker (PWA) ===== */
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -1150,8 +1023,6 @@ const translations = {
         mainTitle: "EasyConvert",
         uploadText: "Drag and drop your PDF file here or click to browse",
         chooseFileBtn: "Choose PDF File",
-        securityTitle: "🔒 Security Verification:",
-        securityDesc: "Please complete this quick verification to ensure secure processing",
         langFlag: "🇮🇱",
         langText: "עברית",
         featureTag1: "Free",
@@ -1184,10 +1055,9 @@ const translations = {
         footerLink1: "More NX Tools",
         footerLink2: "NX1X Lab",
         footerLink3: "GitHub",
-        footerPrivacy: "<strong>Privacy:</strong> Your PDFs are processed entirely in your browser. No files are uploaded to any server. Anonymous usage analytics via Cloudflare Analytics.",
+        footerPrivacy: "<strong>Privacy:</strong> Your PDFs are processed entirely in your browser. No files are uploaded to any server. Anonymous usage analytics via Vercel Analytics.",
         footerLicense: 'Open source under the <a href="https://github.com/NX1X/EasyConvert/blob/main/LICENSE" target="_blank" rel="noopener">Apache License 2.0</a>',
         footerCopyright: `© ${currentYear} NX1X`,
-        statusVerify: "Please complete the security verification below to proceed.",
         statusLoading: "Loading PDF file...",
         statusExtracting: "Extracting data from PDF...",
         statusExtractSuccess: "Successfully extracted {n} rows of data!",
@@ -1210,8 +1080,6 @@ const translations = {
         mainTitle: "EasyConvert",
         uploadText: "גררו ושחררו את קובץ ה-PDF כאן או לחצו לבחירה",
         chooseFileBtn: "בחרו קובץ PDF",
-        securityTitle: "🔒 אימות אבטחה:",
-        securityDesc: "אנא השלימו את האימות המהיר הזה כדי להבטיח עיבוד בטוח",
         langFlag: "🇺🇸",
         langText: "English",
         featureTag1: "חינמי",
@@ -1244,10 +1112,9 @@ const translations = {
         footerLink1: "עוד כלים מבית NX",
         footerLink2: "NX1X Lab",
         footerLink3: "GitHub",
-        footerPrivacy: "<strong>פרטיות:</strong> קבצי ה-PDF שלכם מעובדים לחלוטין בדפדפן שלכם. לא מועלים קבצים לשום שרת. אנליטיקה אנונימית בסיסית דרך Cloudflare Analytics.",
+        footerPrivacy: "<strong>פרטיות:</strong> קבצי ה-PDF שלכם מעובדים לחלוטין בדפדפן שלכם. לא מועלים קבצים לשום שרת. אנליטיקה אנונימית בסיסית דרך Vercel Analytics.",
         footerLicense: 'קוד פתוח תחת <a href="https://github.com/NX1X/EasyConvert/blob/main/LICENSE" target="_blank" rel="noopener">רישיון Apache 2.0</a>',
         footerCopyright: `© ${currentYear} NX1X`,
-        statusVerify: "אנא השלימו את אימות האבטחה למטה כדי להמשיך.",
         statusLoading: "טוען קובץ PDF...",
         statusExtracting: "מחלץ נתונים מה-PDF...",
         statusExtractSuccess: "חולצו {n} שורות נתונים בהצלחה!",
@@ -1307,8 +1174,6 @@ function updateLanguage() {
     updateElement('mainTitle', lang.mainTitle);
     updateElement('uploadText', lang.uploadText);
     updateElement('chooseFileBtn', lang.chooseFileBtn);
-    updateElement('securityTitle', lang.securityTitle);
-    updateElement('securityDesc', lang.securityDesc);
     updateElement('langFlag', lang.langFlag);
     updateElement('langText', lang.langText);
     updateElement('featureTag1', lang.featureTag1);

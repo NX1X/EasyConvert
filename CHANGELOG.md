@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Migrated hosting from Cloudflare Pages to Vercel. Response headers and
+  caching now live in `vercel.json` instead of `public/_headers`
+- Self-hosted PDF.js and SheetJS under `public/vendor/` instead of loading
+  them from cdnjs
+- Replaced Cloudflare Web Analytics with Vercel Analytics, served
+  same-origin
+
+### Removed
+
+- Cloudflare Turnstile: it had no server-side verification anywhere, so it
+  was pure client-side friction with no security value
+- `public/_worker.js`, `public/_headers`, `public/_redirects`, `.cfignore`
+
 ## [1.5.2] - 2026-07-25
 
 ### Fixed

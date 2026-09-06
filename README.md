@@ -15,7 +15,7 @@ A project by [NX1X Lab](https://nx1xlab.dev).
 
 ## Overview
 
-EasyConvert reads a PDF entirely in the browser using PDF.js, detects tabular data, and exports it as an `.xlsx` (via SheetJS) or `.csv` file. No file ever leaves the device: there is no server, no upload, and no data collection. It is deployed as a static site on Cloudflare Pages and installable as a Progressive Web App.
+EasyConvert reads a PDF entirely in the browser using PDF.js, detects tabular data, and exports it as an `.xlsx` (via SheetJS) or `.csv` file. No file ever leaves the device: there is no server, no upload, and no data collection. It is deployed as a static site on Vercel and installable as a Progressive Web App.
 
 ## Features
 
@@ -31,32 +31,31 @@ EasyConvert reads a PDF entirely in the browser using PDF.js, detects tabular da
 
 | Area | Choice |
 | --- | --- |
-| PDF parsing | PDF.js (cdnjs, Subresource Integrity pinned) |
-| Spreadsheet export | SheetJS / xlsx (cdnjs, SRI pinned) |
+| PDF parsing | PDF.js, self-hosted under `public/vendor/` |
+| Spreadsheet export | SheetJS / xlsx, self-hosted under `public/vendor/` |
 | Application code | Vanilla JavaScript, no framework |
 | Styling | Plain CSS (Grid and Flexbox) |
 | PWA | Service Worker + Web App Manifest |
-| Bot protection | Cloudflare Turnstile |
-| Hosting | Cloudflare Pages (static) |
+| Analytics | Vercel Analytics (same-origin, no third-party script) |
+| Hosting | Vercel (static) |
 
 ## Repository Layout
 
 ```
 EasyConvert/
-├── public/                 # The deployable site (Cloudflare output directory)
+├── public/                 # The deployable site (Vercel output directory)
 │   ├── index.html          # Markup
 │   ├── style.css           # Styles
 │   ├── app.js              # Application logic
 │   ├── sw.js               # Service worker
 │   ├── manifest.json       # PWA manifest
-│   ├── _headers            # Cloudflare Pages response headers (CSP etc.)
-│   ├── _redirects          # Cloudflare Pages redirects
-│   ├── _worker.js          # Asset allowlist worker
+│   ├── vendor/             # Self-hosted PDF.js and SheetJS
 │   └── *.svg / *.png / *.ico
+├── vercel.json              # Response headers, caching
 ├── .github/
 │   ├── renovate.json       # Dependency automation
 │   └── workflows/          # CodeQL, Gitleaks, dependency review, CI
-├── scripts/                # Version + release helpers, CDN version check
+├── scripts/                # Version + release helpers, vendored-file check
 ├── package.json
 ├── CHANGELOG.md
 └── LICENSE
@@ -64,11 +63,11 @@ EasyConvert/
 
 ## Security
 
-- **Content Security Policy** with no `'unsafe-inline'` (all JS and CSS are external files, no inline handlers).
-- **Subresource Integrity** on the CDN-hosted PDF.js and SheetJS libraries.
+- **Content Security Policy** with no `'unsafe-inline'` and no third-party origins at all (all JS and CSS are same-origin files, no inline handlers).
+- **PDF.js and SheetJS are self-hosted**, not loaded from a CDN, so there is no third-party script origin in the trust chain.
 - **Strict response headers**: HSTS (preload), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`.
 - **Spreadsheet formula-injection guard** on CSV and XLSX export.
-- **Supply chain**: committed lockfile, GitHub Actions pinned to commit SHAs, Renovate with a 14-day release cooldown, and CI that scans for secrets (Gitleaks), reviews dependencies, runs CodeQL, and verifies CDN versions stay in sync.
+- **Supply chain**: committed lockfile, GitHub Actions pinned to commit SHAs, Renovate with a 14-day release cooldown, and CI that scans for secrets (Gitleaks), reviews dependencies, runs CodeQL, and verifies the vendored libraries are present and consistently referenced.
 
 ## Running Locally
 
@@ -84,19 +83,19 @@ npx serve public
 
 Then open `http://localhost:8000`.
 
-## Deployment (Cloudflare Pages)
+## Deployment (Vercel)
 
-The repository is deployed as a static site. To serve only the site directory and keep the rest of the repository private, set the build output directory to `public`.
+The repository is deployed as a static site. To serve only the site directory and keep the rest of the repository private, the output directory is set to `public`.
 
-1. In the Cloudflare dashboard, create a Pages project and connect this repository.
+1. In the Vercel dashboard, create a project and connect this repository.
 2. Build settings:
-   - **Framework preset**: None
+   - **Framework preset**: Other
    - **Build command**: (leave empty)
-   - **Build output directory**: `public`
+   - **Output directory**: `public`
    - **Root directory**: `/`
 3. Deploy. Only the contents of `public/` are published; everything else in the repository (docs, CI config, package files) is never served.
 
-`public/_headers` applies the security headers and `public/_redirects` handles routing. No environment variables are required.
+`vercel.json` applies the security headers and caching rules. No environment variables are required.
 
 ## Usage
 
@@ -115,7 +114,7 @@ This project follows [Semantic Versioning](https://semver.org/). See [CHANGELOG.
 
 - [PDF.js](https://mozilla.github.io/pdf.js/) - PDF parsing
 - [SheetJS](https://sheetjs.com/) - spreadsheet generation
-- [Cloudflare Pages](https://pages.cloudflare.com/) - hosting
+- [Vercel](https://vercel.com/) - hosting
 
 ## License
 

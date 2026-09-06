@@ -43,12 +43,12 @@
     <link rel="stylesheet" href="style.css?v=1.5.2">
 
     <!-- Preload critical resources -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" as="script" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous">
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" as="script" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous">
+    <link rel="preload" href="/vendor/pdf.min.js" as="script">
+    <link rel="preload" href="/vendor/xlsx.full.min.js" as="script">
 
-    <!-- External libraries (Subresource Integrity pinned) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous"></script>
+    <!-- External libraries, self-hosted (pdf.js 3.11.174, SheetJS 0.18.5) -->
+    <script src="/vendor/pdf.min.js" defer></script>
+    <script src="/vendor/xlsx.full.min.js" defer></script>
 </head>
 <body>
     <header class="header">
@@ -83,27 +83,6 @@
                     <span id="featureTag4">RTL support</span>
                 </div>
                 <input type="file" id="fileInput" class="file-input" accept=".pdf" aria-label="Select PDF file" />
-
-                <!-- Cloudflare Turnstile Widget (appears after file selection) -->
-                <div id="turnstileContainer">
-                    <div class="security-verification-text">
-                        <strong id="securityTitle">🔒 Security Verification:</strong><br>
-                        <span id="securityDesc">Please complete this quick verification to ensure secure processing</span>
-                    </div>
-                    <div id="turnstileWidget">
-                        <!-- Turnstile widget will be rendered here explicitly -->
-                    </div>
-                    <!-- Verification error - no bypass -->
-                    <div id="turnstileFallback">
-                        <p class="turnstile-error-title">Security verification failed</p>
-                        <p class="turnstile-error-desc">
-                            If you have an ad blocker or privacy extension, please allow <strong>challenges.cloudflare.com</strong> and reload the page.
-                        </p>
-                        <button class="turnstile-reload-btn" id="turnstileReloadBtn">
-                            Reload page
-                        </button>
-                    </div>
-                </div>
             </section>
 
             <!-- File Info -->
@@ -363,7 +342,7 @@
             </div>
 
             <div class="footer-privacy" id="footerPrivacy">
-                <strong>Privacy:</strong> Your PDFs are processed entirely in your browser. No files are uploaded to any server. Anonymous usage analytics via Cloudflare Analytics.
+                <strong>Privacy:</strong> Your PDFs are processed entirely in your browser. No files are uploaded to any server. Anonymous usage analytics via Vercel Analytics.
             </div>
 
             <div class="footer-legal">
@@ -376,5 +355,8 @@
 
     <!-- Application script -->
     <script src="app.js?v=1.5.2" defer></script>
+
+    <!-- Vercel Analytics -->
+    <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
